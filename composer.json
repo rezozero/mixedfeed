@@ -1,0 +1,12 @@
+{
+    "name": "rezozero/mixedfeed",
+    "description": "A PHP library to get social networks feeds and merge them",
+    "license": "MIT",
+    "require": {
+        "abraham/twitteroauth": "^0.5.3",
+        "doctrine/cache": "^1.4"
+    },
+    "autoload": {
+        "psr-4": {"RZ\\MixedFeed\\": "src/"}
+    }
+}
