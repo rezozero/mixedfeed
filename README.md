@@ -1,5 +1,5 @@
 # mixedfeed
-A PHP library to get social networks feeds and merge them 
+A PHP library to get social networks feeds and merge them
 
 ![License](http://img.shields.io/:license-mit-blue.svg)
 
@@ -13,6 +13,7 @@ composer require rezozero/mixedfeed
 use RZ\MixedFeed\MixedFeed;
 use RZ\MixedFeed\InstagramFeed;
 use RZ\MixedFeed\TwitterFeed;
+use RZ\MixedFeed\FacebookPageFeed;
 
 $feed = new MixedFeed([
     new InstagramFeed(
@@ -26,6 +27,11 @@ $feed = new MixedFeed([
         'twitter_consumer_secret',
         'twitter_access_token',
         'twitter_access_token_secret'
+        // you can add a doctrine cache provider
+    ),
+    new FacebookPageFeed(
+        'page-id',
+        'app_access_token'
         // you can add a doctrine cache provider
     ),
 ]);
