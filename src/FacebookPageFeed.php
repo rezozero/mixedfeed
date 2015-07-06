@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * @file InstagramFeed.php
+ * @file FacebookPageFeed.php
  * @author Ambroise Maupate
  */
 namespace RZ\MixedFeed;
@@ -29,22 +29,34 @@ use Doctrine\Common\Cache\CacheProvider;
 use RZ\MixedFeed\AbstractFeedProvider;
 
 /**
- * Get an Instagram user feed.
+ * Get a Facebook public page timeline feed using an App Token.
+ *
+ * https://developers.facebook.com/docs/facebook-login/access-tokens
  */
-class InstagramFeed extends AbstractFeedProvider
+class FacebookPageFeed extends AbstractFeedProvider
 {
-    protected $userId;
+    protected $pageId;
     protected $accessToken;
     protected $cacheProvider;
     protected $cacheKey;
+
     protected static $timeKey = 'created_time';
 
-    public function __construct($userId, $accessToken, CacheProvider $cacheProvider = null)
-    {
-        $this->userId = $userId;
+    /**
+     *
+     * @param string             $pageId
+     * @param string             $accessToken Your App Token
+     * @param CacheProvider|null $cacheProvider
+     */
+    public function __construct(
+        $pageId,
+        $accessToken,
+        CacheProvider $cacheProvider = null
+    ) {
+        $this->pageId = $pageId;
         $this->accessToken = $accessToken;
         $this->cacheProvider = $cacheProvider;
-        $this->cacheKey = $this->getFeedPlatform() . $this->userId;
+        $this->cacheKey = $this->getFeedPlatform() . $this->pageId;
     }
 
     protected function getFeed($count = 5)
@@ -55,10 +67,10 @@ class InstagramFeed extends AbstractFeedProvider
         }
 
         $client = new \GuzzleHttp\Client();
-        $response = $client->get('https://api.instagram.com/v1/users/' . $this->userId . '/media/recent/', [
+        $response = $client->get('https://graph.facebook.com/' . $this->pageId . '/posts', [
             'query' => [
                 'access_token' => $this->accessToken,
-                'count' => $count,
+                'limit' => $count,
             ],
         ]);
         $body = json_decode($response->getBody());
@@ -80,7 +92,7 @@ class InstagramFeed extends AbstractFeedProvider
     public function getDateTime($item)
     {
         $date = new \DateTime();
-        $date->setTimestamp($item->created_time);
+        $date->setTimestamp(strtotime($item->created_time));
         return $date;
     }
 
@@ -89,6 +101,6 @@ class InstagramFeed extends AbstractFeedProvider
      */
     public function getFeedPlatform()
     {
-        return 'instagram';
+        return 'facebook_page';
     }
 }

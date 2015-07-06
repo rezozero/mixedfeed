@@ -50,3 +50,5 @@ Temporary Items
 
 # sftp configuration file
 sftp-config.json
+
+test.php
