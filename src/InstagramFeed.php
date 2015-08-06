@@ -49,9 +49,11 @@ class InstagramFeed extends AbstractFeedProvider
 
     protected function getFeed($count = 5)
     {
+        $countKey = $this->cacheKey . $count;
+
         if (null !== $this->cacheProvider &&
-            $this->cacheProvider->contains($this->cacheKey . $count)) {
-            return $this->cacheProvider->fetch($this->cacheKey . $count);
+            $this->cacheProvider->contains($countKey)) {
+            return $this->cacheProvider->fetch($countKey);
         }
 
         $client = new \GuzzleHttp\Client();
@@ -65,8 +67,8 @@ class InstagramFeed extends AbstractFeedProvider
 
         if (null !== $this->cacheProvider) {
             $this->cacheProvider->save(
-                $this->cacheKey . $count,
-                $body,
+                $countKey,
+                $body->data,
                 7200
             );
         }

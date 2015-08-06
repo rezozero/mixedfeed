@@ -43,7 +43,7 @@ return $feed->getItems(12);
 
 *mixedfeed* can combine multiple social feeds so you can loop over them and use some common data fields such as `feedItemPlatform` and `normalizedDate`.
 
-Each feed provider much add these two parameters in feed items:
+Each feed provider must inject these two parameters in feed items:
 
 * `feedItemPlatform`: This is your social network name as a *string* i.e. «twitter». It will be important to cache your feed and for your HTML template engine to render properly each feed item.
 
