@@ -53,4 +53,19 @@ interface FeedProviderInterface
      * @return \DateTime
      */
     public function getDateTime($item);
+
+    /**
+     * Check if the feed provider has succeded to
+     * contact API.
+     *
+     * @return boolean
+     */
+    public function isValid($feed);
+
+    /**
+     * Get errors details.
+     *
+     * @return string
+     */
+    public function getErrors($feed);
 }

@@ -20,40 +20,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * @file AbstractFeedProvider.php
+ * @file ErroredFeedItem.php
  * @author Ambroise Maupate
  */
-namespace RZ\MixedFeed;
-
-use RZ\MixedFeed\FeedProviderInterface;
-use RZ\MixedFeed\Exception\FeedProviderErrorException;
+namespace RZ\MixedFeed\MockObject;
 
 /**
- * Implements a basic feed provider with
- * platform name and \DateTime injection.
+ * ErroredFeedItem for displaying something even if feed
+ * provider errored.
  */
-abstract class AbstractFeedProvider implements FeedProviderInterface
+class ErroredFeedItem
 {
+    public $normalizedDate;
+    public $message;
+    public $feedItemPlatform;
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getItems($count = 5)
+    public function __construct($message, $feedItemPlatform)
     {
-        $list = $this->getFeed($count);
-
-        if ($this->isValid($list)) {
-            /*
-             * Need to inject feed item platform
-             * to be able to merge them with other types
-             */
-            foreach ($list as $item) {
-                $item->feedItemPlatform = $this->getFeedPlatform();
-                $item->normalizedDate = $this->getDateTime($item);
-            }
-            return $list;
-        } else {
-            throw new FeedProviderErrorException($this->getFeedPlatform(), $this->getErrors($list));
-        }
+        $this->message = $message;
+        $this->feedItemPlatform = $feedItemPlatform . '[errored]';
+        $this->normalizedDate = new \Datetime('now');
     }
 }
