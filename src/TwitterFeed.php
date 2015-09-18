@@ -123,4 +123,27 @@ class TwitterFeed extends AbstractFeedProvider
     {
         return 'twitter';
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isValid($feed)
+    {
+        return empty($feed->errors);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getErrors($feed)
+    {
+        $errors = "";
+
+        foreach ($feed->errors as $error) {
+            $errors .= "[" . $error->code . "] ";
+            $errors .= $error->message . PHP_EOL;
+        }
+
+        return $errors;
+    }
 }

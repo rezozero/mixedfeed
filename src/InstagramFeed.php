@@ -26,6 +26,7 @@
 namespace RZ\MixedFeed;
 
 use Doctrine\Common\Cache\CacheProvider;
+use GuzzleHttp\Exception\ClientException;
 use RZ\MixedFeed\AbstractFeedProvider;
 
 /**
@@ -49,31 +50,37 @@ class InstagramFeed extends AbstractFeedProvider
 
     protected function getFeed($count = 5)
     {
-        $countKey = $this->cacheKey . $count;
+        try {
+            $countKey = $this->cacheKey . $count;
 
-        if (null !== $this->cacheProvider &&
-            $this->cacheProvider->contains($countKey)) {
-            return $this->cacheProvider->fetch($countKey);
+            if (null !== $this->cacheProvider &&
+                $this->cacheProvider->contains($countKey)) {
+                return $this->cacheProvider->fetch($countKey);
+            }
+
+            $client = new \GuzzleHttp\Client();
+            $response = $client->get('https://api.instagram.com/v1/users/' . $this->userId . '/media/recent/', [
+                'query' => [
+                    'access_token' => $this->accessToken,
+                    'count' => $count,
+                ],
+            ]);
+            $body = json_decode($response->getBody());
+
+            if (null !== $this->cacheProvider) {
+                $this->cacheProvider->save(
+                    $countKey,
+                    $body->data,
+                    7200
+                );
+            }
+
+            return $body->data;
+        } catch (ClientException $e) {
+            return [
+                'error' => $e->getMessage(),
+            ];
         }
-
-        $client = new \GuzzleHttp\Client();
-        $response = $client->get('https://api.instagram.com/v1/users/' . $this->userId . '/media/recent/', [
-            'query' => [
-                'access_token' => $this->accessToken,
-                'count' => $count,
-            ],
-        ]);
-        $body = json_decode($response->getBody());
-
-        if (null !== $this->cacheProvider) {
-            $this->cacheProvider->save(
-                $countKey,
-                $body->data,
-                7200
-            );
-        }
-
-        return $body->data;
     }
 
     /**
@@ -92,5 +99,21 @@ class InstagramFeed extends AbstractFeedProvider
     public function getFeedPlatform()
     {
         return 'instagram';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isValid($feed)
+    {
+        return !(is_array($feed) && isset($feed['error']));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getErrors($feed)
+    {
+        return $feed['error'];
     }
 }

@@ -26,6 +26,8 @@
 namespace RZ\MixedFeed;
 
 use RZ\MixedFeed\AbstractFeedProvider;
+use RZ\MixedFeed\Exception\FeedProviderErrorException;
+use RZ\MixedFeed\MockObject\ErroredFeedItem;
 
 /**
  * Combine feed providers and sort them antechronological.
@@ -60,7 +62,13 @@ class MixedFeed extends AbstractFeedProvider
         $list = [];
 
         foreach ($this->providers as $provider) {
-            $list = array_merge($list, $provider->getItems($perProviderCount));
+            try {
+                $list = array_merge($list, $provider->getItems($perProviderCount));
+            } catch (FeedProviderErrorException $e) {
+                $list = array_merge($list, [
+                    new ErroredFeedItem($e->getMessage(), $provider->getFeedPlatform()),
+                ]);
+            }
         }
 
         usort($list, function ($a, $b) {
@@ -91,5 +99,21 @@ class MixedFeed extends AbstractFeedProvider
     public function getDateTime($item)
     {
         return new \DateTime('now');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isValid($feed)
+    {
+        return true;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getErrors($feed)
+    {
+        return '';
     }
 }

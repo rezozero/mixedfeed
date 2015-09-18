@@ -26,6 +26,7 @@
 namespace RZ\MixedFeed;
 
 use Doctrine\Common\Cache\CacheProvider;
+use GuzzleHttp\Exception\ClientException;
 use RZ\MixedFeed\AbstractFeedProvider;
 
 /**
@@ -61,31 +62,37 @@ class FacebookPageFeed extends AbstractFeedProvider
 
     protected function getFeed($count = 5)
     {
-        $countKey = $this->cacheKey . $count;
+        try {
+            $countKey = $this->cacheKey . $count;
 
-        if (null !== $this->cacheProvider &&
-            $this->cacheProvider->contains($countKey)) {
-            return $this->cacheProvider->fetch($countKey);
+            if (null !== $this->cacheProvider &&
+                $this->cacheProvider->contains($countKey)) {
+                return $this->cacheProvider->fetch($countKey);
+            }
+
+            $client = new \GuzzleHttp\Client();
+            $response = $client->get('https://graph.facebook.com/' . $this->pageId . '/posts', [
+                'query' => [
+                    'access_token' => $this->accessToken,
+                    'limit' => $count,
+                ],
+            ]);
+            $body = json_decode($response->getBody());
+
+            if (null !== $this->cacheProvider) {
+                $this->cacheProvider->save(
+                    $countKey,
+                    $body->data,
+                    7200
+                );
+            }
+
+            return $body->data;
+        } catch (ClientException $e) {
+            return [
+                'error' => $e->getMessage(),
+            ];
         }
-
-        $client = new \GuzzleHttp\Client();
-        $response = $client->get('https://graph.facebook.com/' . $this->pageId . '/posts', [
-            'query' => [
-                'access_token' => $this->accessToken,
-                'limit' => $count,
-            ],
-        ]);
-        $body = json_decode($response->getBody());
-
-        if (null !== $this->cacheProvider) {
-            $this->cacheProvider->save(
-                $countKey,
-                $body->data,
-                7200
-            );
-        }
-
-        return $body->data;
     }
 
     /**
@@ -104,5 +111,21 @@ class FacebookPageFeed extends AbstractFeedProvider
     public function getFeedPlatform()
     {
         return 'facebook_page';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isValid($feed)
+    {
+        return !(is_array($feed) && isset($feed['error']));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getErrors($feed)
+    {
+        return $feed['error'];
     }
 }
