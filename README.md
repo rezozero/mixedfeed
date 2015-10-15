@@ -52,15 +52,16 @@ For example, if you are using *Twig*, you will be able to include a sub-template
 ```twig
 {% for socialItem in mixedFeedItems %}
 {% include ‘social-blocks/‘ ~ socialItem.feedItemPlatform ~ ‘.html.twig’ %}
-{% enduro %}
+{% endfor %}
 ```
 
 * `normalizedDate`: This is a crucial parameter as it allows *mixedfeed* library to sort *antechronologically* multiple feeds with heterogeneous structures.
 
 ## Feed providers
 
-|=======|=========|
-| InstragramFeed | Call over `/v1/users/$userId/media/recent/` endpoint. It needs a `$userId` and an `$accessToken` |
+|                |                  |
+| -------------- | ---------------- |
+| InstagramFeed | Call over `/v1/users/$userId/media/recent/` endpoint. It needs a `$userId` and an `$accessToken` |
 | TwitterFeed | Call over `statuses/user_timeline` endpoint. It requires a `$userId`, a `$consumerKey`, a `$consumerSecret`, an `$accessToken` and an `$accessTokenSecret`. |
 | FacebookPageFeed | Call over `https://graph.facebook.com/$pageId/posts` endpoint. It requires a `$pageId` and an `$accessToken`. This feed provider only works for public Facebook **pages**. To get an access-token visit: https://developers.facebook.com/docs/facebook-login/access-tokens |
 | PinterestBoardFeed | Call over `/v1/boards/$boardId/pins/` endpoint. It requires a `$boardId` and an `$accessToken`. To get an access-token visit: https://developers.pinterest.com/tools/access_token/ |
