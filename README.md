@@ -10,28 +10,28 @@ composer require rezozero/mixedfeed
 ```
 
 ```php
-use RZ\MixedFeed\MixedFeed;
-use RZ\MixedFeed\InstagramFeed;
-use RZ\MixedFeed\TwitterFeed;
-use RZ\MixedFeed\FacebookPageFeed;
+use Rezo-Zero\MixedFeed\MixedFeed;
+use Rezo-Zero\MixedFeed\InstagramFeed;
+use Rezo-Zero\MixedFeed\TwitterFeed;
+use Rezo-Zero\MixedFeed\FacebookPageFeed;
 
 $feed = new MixedFeed([
     new InstagramFeed(
-        'instagram_user_id',
-        'instagram_access_token'
+        ‘instagram_user_id’,
+        ‘instagram_access_token’
         // you can add a doctrine cache provider
     ),
     new TwitterFeed(
-        'twitter_user_id',
-        'twitter_consumer_key',
-        'twitter_consumer_secret',
-        'twitter_access_token',
-        'twitter_access_token_secret'
+        ‘twitter_user_id’,
+        ‘twitter_consumer_key’,
+        ‘twitter_consumer_secret’,
+        ‘twitter_access_token’,
+        ‘twitter_access_token_secret’
         // you can add a doctrine cache provider
     ),
     new FacebookPageFeed(
-        'page-id',
-        'app_access_token'
+        ‘page-id’,
+        ‘app_access_token’
         // you can add a doctrine cache provider
     ),
 ]);
@@ -51,8 +51,16 @@ For example, if you are using *Twig*, you will be able to include a sub-template
 
 ```twig
 {% for socialItem in mixedFeedItems %}
-{% include 'social-blocks/' ~ socialItem.feedItemPlatform ~ '.html.twig' %}
-{% endfor %}
+{% include ‘social-blocks/‘ ~ socialItem.feedItemPlatform ~ ‘.html.twig’ %}
+{% enduro %}
 ```
 
 * `normalizedDate`: This is a crucial parameter as it allows *mixedfeed* library to sort *antechronologically* multiple feeds with heterogeneous structures.
+
+## Feed providers
+
+|=======|=========|
+| InstragramFeed | Call over `/v1/users/$userId/media/recent/` endpoint. It needs a `$userId` and an `$accessToken` |
+| TwitterFeed | Call over `statuses/user_timeline` endpoint. It requires a `$userId`, a `$consumerKey`, a `$consumerSecret`, an `$accessToken` and an `$accessTokenSecret`. |
+| FacebookPageFeed | Call over `https://graph.facebook.com/$pageId/posts` endpoint. It requires a `$pageId` and an `$accessToken`. This feed provider only works for public Facebook **pages**. To get an access-token visit: https://developers.facebook.com/docs/facebook-login/access-tokens |
+| PinterestBoardFeed | Call over `/v1/boards/$boardId/pins/` endpoint. It requires a `$boardId` and an `$accessToken`. To get an access-token visit: https://developers.pinterest.com/tools/access_token/ |
