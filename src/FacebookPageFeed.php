@@ -28,6 +28,7 @@ namespace RZ\MixedFeed;
 use Doctrine\Common\Cache\CacheProvider;
 use GuzzleHttp\Exception\ClientException;
 use RZ\MixedFeed\AbstractFeedProvider;
+use RZ\MixedFeed\Exception\CredentialsException;
 
 /**
  * Get a Facebook public page timeline feed using an App Token.
@@ -58,6 +59,12 @@ class FacebookPageFeed extends AbstractFeedProvider
         $this->accessToken = $accessToken;
         $this->cacheProvider = $cacheProvider;
         $this->cacheKey = $this->getFeedPlatform() . $this->pageId;
+
+        if (null === $this->accessToken ||
+            false === $this->accessToken ||
+            empty($this->accessToken)) {
+            throw new CredentialsException("FacebookPageFeed needs a valid App access token.", 1);
+        }
     }
 
     protected function getFeed($count = 5)
@@ -118,7 +125,7 @@ class FacebookPageFeed extends AbstractFeedProvider
      */
     public function isValid($feed)
     {
-        return !(is_array($feed) && isset($feed['error']));
+        return null !== $feed && is_array($feed) && !isset($feed['error']);
     }
 
     /**
