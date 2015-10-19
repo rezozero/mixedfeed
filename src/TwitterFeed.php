@@ -110,7 +110,6 @@ class TwitterFeed extends AbstractFeedProvider
             $this->cacheProvider->contains($countKey)) {
             return $this->cacheProvider->fetch($countKey);
         }
-
         $body = $this->twitterConnection->get("statuses/user_timeline", [
             "user_id" => $this->userId,
             "count" => $count,
@@ -151,7 +150,7 @@ class TwitterFeed extends AbstractFeedProvider
      */
     public function isValid($feed)
     {
-        return null !== $feed && (null === $feed->errors || empty($feed->errors));
+        return null !== $feed && is_array($feed);
     }
 
     /**
