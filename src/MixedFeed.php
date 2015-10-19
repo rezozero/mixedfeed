@@ -58,29 +58,31 @@ class MixedFeed extends AbstractFeedProvider
      */
     public function getItems($count = 5)
     {
-        $perProviderCount = floor($count / count($this->providers));
         $list = [];
+        if (count($this->providers) > 0) {
+            $perProviderCount = floor($count / count($this->providers));
 
-        foreach ($this->providers as $provider) {
-            try {
-                $list = array_merge($list, $provider->getItems($perProviderCount));
-            } catch (FeedProviderErrorException $e) {
-                $list = array_merge($list, [
-                    new ErroredFeedItem($e->getMessage(), $provider->getFeedPlatform()),
-                ]);
+            foreach ($this->providers as $provider) {
+                try {
+                    $list = array_merge($list, $provider->getItems($perProviderCount));
+                } catch (FeedProviderErrorException $e) {
+                    $list = array_merge($list, [
+                        new ErroredFeedItem($e->getMessage(), $provider->getFeedPlatform()),
+                    ]);
+                }
             }
+
+            usort($list, function ($a, $b) {
+                $aDT = $a->normalizedDate;
+                $bDT = $b->normalizedDate;
+
+                if ($aDT == $bDT) {
+                    return 0;
+                }
+                // DESC sorting
+                return ($aDT > $bDT) ? -1 : 1;
+            });
         }
-
-        usort($list, function ($a, $b) {
-            $aDT = $a->normalizedDate;
-            $bDT = $b->normalizedDate;
-
-            if ($aDT == $bDT) {
-                return 0;
-            }
-            // DESC sorting
-            return ($aDT > $bDT) ? -1 : 1;
-        });
 
         return $list;
     }
