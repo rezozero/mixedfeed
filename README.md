@@ -59,9 +59,9 @@ For example, if you are using *Twig*, you will be able to include a sub-template
 
 ## Feed providers
 
-|                |                  |
+|  Feed provider class  |  Description |
 | -------------- | ---------------- |
 | InstagramFeed | Call over `/v1/users/$userId/media/recent/` endpoint. It needs a `$userId` and an `$accessToken` |
-| TwitterFeed | Call over `statuses/user_timeline` endpoint. It requires a `$userId`, a `$consumerKey`, a `$consumerSecret`, an `$accessToken` and an `$accessTokenSecret`. |
+| TwitterFeed | Call over `statuses/user_timeline` endpoint. It requires a `$userId`, a `$consumerKey`, a `$consumerSecret`, an `$accessToken` and an `$accessTokenSecret`. Be careful, Twitter API won’t retrieve tweets older than 4-5 month, your item count could be lesser than expected. In the same way, Twitter removes retweets after retrieving the items count. |
 | FacebookPageFeed | Call over `https://graph.facebook.com/$pageId/posts` endpoint. It requires a `$pageId` and an `$accessToken`. This feed provider only works for public Facebook **pages**. To get an access-token visit: https://developers.facebook.com/docs/facebook-login/access-tokens |
 | PinterestBoardFeed | Call over `/v1/boards/$boardId/pins/` endpoint. It requires a `$boardId` and an `$accessToken`. To get an access-token visit: https://developers.pinterest.com/tools/access_token/ |
