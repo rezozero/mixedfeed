@@ -20,40 +20,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * @file AbstractFeedProvider.php
+ * @file CredentialsException.php
  * @author Ambroise Maupate
  */
-namespace RZ\MixedFeed;
+namespace RZ\MixedFeed\Exception;
 
-use RZ\MixedFeed\Exception\FeedProviderErrorException;
-use RZ\MixedFeed\FeedProviderInterface;
-
-/**
- * Implements a basic feed provider with
- * platform name and \DateTime injection.
- */
-abstract class AbstractFeedProvider implements FeedProviderInterface
+class CredentialsException extends \Exception
 {
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getItems($count = 5)
+    public function __construct($message = "Unsufficient authentification data found.")
     {
-        $list = $this->getFeed($count);
-
-        if ($this->isValid($list)) {
-            /*
-             * Need to inject feed item platform
-             * to be able to merge them with other types
-             */
-            foreach ($list as $item) {
-                $item->feedItemPlatform = $this->getFeedPlatform();
-                $item->normalizedDate = $this->getDateTime($item);
-            }
-            return $list;
-        } else {
-            throw new FeedProviderErrorException($this->getFeedPlatform(), $this->getErrors($list));
-        }
+        parent::__construct($message, 1);
     }
 }

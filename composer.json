@@ -3,7 +3,7 @@
     "description": "A PHP library to get social networks feeds and merge them",
     "license": "MIT",
     "require": {
-        "abraham/twitteroauth": "^0.5.3",
+        "abraham/twitteroauth": "^0.6.1",
         "doctrine/cache": "^1.4",
         "guzzlehttp/guzzle": "~5.0"
     },

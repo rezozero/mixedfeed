@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * @file InstagramFeed.php
+ * @file PinterestBoardFeed.php
  * @author Ambroise Maupate
  */
 namespace RZ\MixedFeed;
@@ -31,27 +31,39 @@ use RZ\MixedFeed\AbstractFeedProvider;
 use RZ\MixedFeed\Exception\CredentialsException;
 
 /**
- * Get an Instagram user feed.
+ * Get a Pinterest public board pins feed.
+ *
+ * https://developers.pinterest.com/tools/access_token/
  */
-class InstagramFeed extends AbstractFeedProvider
+class PinterestBoardFeed extends AbstractFeedProvider
 {
-    protected $userId;
+    protected $boardId;
     protected $accessToken;
     protected $cacheProvider;
     protected $cacheKey;
-    protected static $timeKey = 'created_time';
 
-    public function __construct($userId, $accessToken, CacheProvider $cacheProvider = null)
-    {
-        $this->userId = $userId;
+    protected static $timeKey = 'created_at';
+
+    /**
+     *
+     * @param string             $boardId
+     * @param string             $accessToken Your App Token
+     * @param CacheProvider|null $cacheProvider
+     */
+    public function __construct(
+        $boardId,
+        $accessToken,
+        CacheProvider $cacheProvider = null
+    ) {
+        $this->boardId = $boardId;
         $this->accessToken = $accessToken;
         $this->cacheProvider = $cacheProvider;
-        $this->cacheKey = $this->getFeedPlatform() . $this->userId;
+        $this->cacheKey = $this->getFeedPlatform() . $this->boardId;
 
         if (null === $this->accessToken ||
             false === $this->accessToken ||
             empty($this->accessToken)) {
-            throw new CredentialsException("InstagramFeed needs a valid access token.", 1);
+            throw new CredentialsException("PinterestBoardFeed needs a valid access token.", 1);
         }
     }
 
@@ -66,10 +78,11 @@ class InstagramFeed extends AbstractFeedProvider
             }
 
             $client = new \GuzzleHttp\Client();
-            $response = $client->get('https://api.instagram.com/v1/users/' . $this->userId . '/media/recent/', [
+            $response = $client->get('https://api.pinterest.com/v1/boards/' . $this->boardId . '/pins/', [
                 'query' => [
                     'access_token' => $this->accessToken,
-                    'count' => $count,
+                    'limit' => $count,
+                    'fields' => 'id,color,created_at,creator,media,image[original],note,link,url',
                 ],
             ]);
             $body = json_decode($response->getBody());
@@ -96,7 +109,7 @@ class InstagramFeed extends AbstractFeedProvider
     public function getDateTime($item)
     {
         $date = new \DateTime();
-        $date->setTimestamp($item->created_time);
+        $date->setTimestamp(strtotime($item->created_at));
         return $date;
     }
 
@@ -105,7 +118,7 @@ class InstagramFeed extends AbstractFeedProvider
      */
     public function getFeedPlatform()
     {
-        return 'instagram';
+        return 'pinterest_board';
     }
 
     /**

@@ -28,6 +28,7 @@ namespace RZ\MixedFeed;
 use Abraham\TwitterOAuth\TwitterOAuth;
 use Doctrine\Common\Cache\CacheProvider;
 use RZ\MixedFeed\AbstractFeedProvider;
+use RZ\MixedFeed\Exception\CredentialsException;
 
 /**
  * Get a Twitter user timeline feed.
@@ -72,6 +73,27 @@ class TwitterFeed extends AbstractFeedProvider
         $this->includeRts = $includeRts;
         $this->cacheKey = $this->getFeedPlatform() . $this->userId;
 
+        if (null === $accessToken ||
+            false === $accessToken ||
+            empty($accessToken)) {
+            throw new CredentialsException("TwitterFeed needs a valid access token.", 1);
+        }
+        if (null === $accessTokenSecret ||
+            false === $accessTokenSecret ||
+            empty($accessTokenSecret)) {
+            throw new CredentialsException("TwitterFeed needs a valid access token secret.", 1);
+        }
+        if (null === $consumerKey ||
+            false === $consumerKey ||
+            empty($consumerKey)) {
+            throw new CredentialsException("TwitterFeed needs a valid consumer key.", 1);
+        }
+        if (null === $consumerSecret ||
+            false === $consumerSecret ||
+            empty($consumerSecret)) {
+            throw new CredentialsException("TwitterFeed needs a valid consumer secret.", 1);
+        }
+
         $this->twitterConnection = new TwitterOAuth(
             $consumerKey,
             $consumerSecret,
@@ -88,7 +110,6 @@ class TwitterFeed extends AbstractFeedProvider
             $this->cacheProvider->contains($countKey)) {
             return $this->cacheProvider->fetch($countKey);
         }
-
         $body = $this->twitterConnection->get("statuses/user_timeline", [
             "user_id" => $this->userId,
             "count" => $count,
@@ -129,7 +150,7 @@ class TwitterFeed extends AbstractFeedProvider
      */
     public function isValid($feed)
     {
-        return empty($feed->errors);
+        return null !== $feed && is_array($feed);
     }
 
     /**
@@ -139,9 +160,11 @@ class TwitterFeed extends AbstractFeedProvider
     {
         $errors = "";
 
-        foreach ($feed->errors as $error) {
-            $errors .= "[" . $error->code . "] ";
-            $errors .= $error->message . PHP_EOL;
+        if (null !== $feed && null !== $feed->errors && !empty($feed->errors)) {
+            foreach ($feed->errors as $error) {
+                $errors .= "[" . $error->code . "] ";
+                $errors .= $error->message . PHP_EOL;
+            }
         }
 
         return $errors;
