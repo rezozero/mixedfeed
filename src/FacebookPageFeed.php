@@ -41,6 +41,7 @@ class FacebookPageFeed extends AbstractFeedProvider
     protected $accessToken;
     protected $cacheProvider;
     protected $cacheKey;
+    protected $fields;
 
     protected static $timeKey = 'created_time';
 
@@ -49,16 +50,21 @@ class FacebookPageFeed extends AbstractFeedProvider
      * @param string             $pageId
      * @param string             $accessToken Your App Token
      * @param CacheProvider|null $cacheProvider
+     * @param array              $fields
      */
     public function __construct(
         $pageId,
         $accessToken,
-        CacheProvider $cacheProvider = null
+        CacheProvider $cacheProvider = null,
+        $fields = []
     ) {
         $this->pageId = $pageId;
         $this->accessToken = $accessToken;
         $this->cacheProvider = $cacheProvider;
         $this->cacheKey = $this->getFeedPlatform() . $this->pageId;
+
+        $this->fields = ['link','picture','message','story','type','created_time','source','status_type'];
+        $this->fields = array_merge($this->fields, $fields);
 
         if (null === $this->accessToken ||
             false === $this->accessToken ||
@@ -82,6 +88,7 @@ class FacebookPageFeed extends AbstractFeedProvider
                 'query' => [
                     'access_token' => $this->accessToken,
                     'limit' => $count,
+                    'fields' => implode(',',$this->fields),
                 ],
             ]);
             $body = json_decode($response->getBody());
