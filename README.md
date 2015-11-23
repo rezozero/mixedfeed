@@ -13,6 +13,7 @@ composer require rezozero/mixedfeed
 use Rezo-Zero\MixedFeed\MixedFeed;
 use Rezo-Zero\MixedFeed\InstagramFeed;
 use Rezo-Zero\MixedFeed\TwitterFeed;
+use Rezo-Zero\MixedFeed\TwitterSearchFeed;
 use Rezo-Zero\MixedFeed\FacebookPageFeed;
 
 $feed = new MixedFeed([
@@ -23,6 +24,18 @@ $feed = new MixedFeed([
     ),
     new TwitterFeed(
         ‘twitter_user_id’,
+        ‘twitter_consumer_key’,
+        ‘twitter_consumer_secret’,
+        ‘twitter_access_token’,
+        ‘twitter_access_token_secret’
+        // you can add a doctrine cache provider
+    ),
+    new TwitterSearchFeed(
+        [
+            'from' => 'rezo_zero',
+            'since' => '2015-11-01',
+            'until' => '2015-11-30'
+        ],
         ‘twitter_consumer_key’,
         ‘twitter_consumer_secret’,
         ‘twitter_access_token’,
@@ -64,5 +77,6 @@ For example, if you are using *Twig*, you will be able to include a sub-template
 | -------------- | ---------------- |
 | InstagramFeed | Call over `/v1/users/$userId/media/recent/` endpoint. It needs a `$userId` and an `$accessToken` |
 | TwitterFeed | Call over `statuses/user_timeline` endpoint. It requires a `$userId`, a `$consumerKey`, a `$consumerSecret`, an `$accessToken` and an `$accessTokenSecret`. Be careful, Twitter API won’t retrieve tweets older than 4-5 month, your item count could be lesser than expected. In the same way, Twitter removes retweets after retrieving the items count. |
-| FacebookPageFeed | Call over `https://graph.facebook.com/$pageId/posts` endpoint. It requires a `$pageId` and an `$accessToken`. This feed provider only works for public Facebook **pages**. To get an access-token visit: https://developers.facebook.com/docs/facebook-login/access-tokens. By default, `link`, `picture`, `message`, `story`, `type`, `created_time`, `source`, `status_type` fields are queried, you can add your own by passing `$field` array as last parameter. |
+| TwitterSearchFeed | Call over `search/tweets` endpoint. It requires a `$queryParams` array, a `$consumerKey`, a `$consumerSecret`, an `$accessToken` and an `$accessTokenSecret`. Be careful, Twitter API won’t retrieve tweets older than 4-5 month, your item count could be lesser than expected. `$queryParams` must be a *key-valued* array with *query operators* according to [Twitter API documentation](https://dev.twitter.com/rest/public/search).  |
+| FacebookPageFeed | Call over `https://graph.facebook.com/$pageId/posts` endpoint. It requires a `$pageId` and an `$accessToken`. This feed provider only works for public Facebook **pages**. To get an access-token visit: https://developers.facebook.com/docs/facebook-login/access-tokens. By default, `link`, `picture`, `message`, `story`, `type`, `created_time`, `source`, `status_type` fields are queried, you can add your own by passing `$field` array as last parameter. You can add `since` and `until` query parameters using `setSince(\Datetime)` and `setUntil(\Datetime)` methods. |
 | PinterestBoardFeed | Call over `/v1/boards/$boardId/pins/` endpoint. It requires a `$boardId` and an `$accessToken`. To get an access-token visit: https://developers.pinterest.com/tools/access_token/ |
