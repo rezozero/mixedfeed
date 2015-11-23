@@ -42,6 +42,8 @@ class FacebookPageFeed extends AbstractFeedProvider
     protected $cacheProvider;
     protected $cacheKey;
     protected $fields;
+    protected $since = null;
+    protected $until = null;
 
     protected static $timeKey = 'created_time';
 
@@ -63,7 +65,7 @@ class FacebookPageFeed extends AbstractFeedProvider
         $this->cacheProvider = $cacheProvider;
         $this->cacheKey = $this->getFeedPlatform() . $this->pageId;
 
-        $this->fields = ['link','picture','message','story','type','created_time','source','status_type'];
+        $this->fields = ['link', 'picture', 'message', 'story', 'type', 'created_time', 'source', 'status_type'];
         $this->fields = array_unique(array_merge($this->fields, $fields));
 
         if (null === $this->accessToken ||
@@ -84,13 +86,26 @@ class FacebookPageFeed extends AbstractFeedProvider
             }
 
             $client = new \GuzzleHttp\Client();
-            $response = $client->get('https://graph.facebook.com/' . $this->pageId . '/posts', [
+            $params = [
                 'query' => [
                     'access_token' => $this->accessToken,
                     'limit' => $count,
-                    'fields' => implode(',',$this->fields),
+                    'fields' => implode(',', $this->fields),
                 ],
-            ]);
+            ];
+            /*
+             * Filter by date range
+             */
+            if (null !== $this->since &&
+                $this->since instanceof \Datetime) {
+                $params['query']['since'] = $this->since->getTimestamp();
+            }
+            if (null !== $this->until &&
+                $this->until instanceof \Datetime) {
+                $params['query']['until'] = $this->until->getTimestamp();
+            }
+
+            $response = $client->get('https://graph.facebook.com/' . $this->pageId . '/posts', $params);
             $body = json_decode($response->getBody());
 
             if (null !== $this->cacheProvider) {
@@ -141,5 +156,53 @@ class FacebookPageFeed extends AbstractFeedProvider
     public function getErrors($feed)
     {
         return $feed['error'];
+    }
+
+    /**
+     * Gets the value of since.
+     *
+     * @return \Datetime
+     */
+    public function getSince()
+    {
+        return $this->since;
+    }
+
+    /**
+     * Sets the value of since.
+     *
+     * @param \Datetime $since the since
+     *
+     * @return self
+     */
+    public function setSince(\Datetime $since)
+    {
+        $this->since = $since;
+
+        return $this;
+    }
+
+    /**
+     * Gets the value of until.
+     *
+     * @return \Datetime
+     */
+    public function getUntil()
+    {
+        return $this->until;
+    }
+
+    /**
+     * Sets the value of until.
+     *
+     * @param \Datetime $until the until
+     *
+     * @return self
+     */
+    public function setUntil(\Datetime $until)
+    {
+        $this->until = $until;
+
+        return $this;
     }
 }
