@@ -26,6 +26,7 @@
 namespace RZ\MixedFeed;
 
 use Abraham\TwitterOAuth\TwitterOAuth;
+use Abraham\TwitterOAuth\TwitterOAuthException;
 use Doctrine\Common\Cache\CacheProvider;
 use RZ\MixedFeed\AbstractFeedProvider;
 use RZ\MixedFeed\Exception\CredentialsException;
@@ -111,24 +112,30 @@ class TwitterSearchFeed extends AbstractFeedProvider
     {
         $countKey = $this->cacheKey . $count;
 
-        if (null !== $this->cacheProvider &&
-            $this->cacheProvider->contains($countKey)) {
-            return $this->cacheProvider->fetch($countKey);
-        }
-        $body = $this->twitterConnection->get("search/tweets", [
-            "q" => $this->formatQueryParams(),
-            "count" => $count,
-        ]);
+        try {
+            if (null !== $this->cacheProvider &&
+                $this->cacheProvider->contains($countKey)) {
+                return $this->cacheProvider->fetch($countKey);
+            }
+            $body = $this->twitterConnection->get("search/tweets", [
+                "q" => $this->formatQueryParams(),
+                "count" => $count,
+            ]);
 
-        if (null !== $this->cacheProvider) {
-            $this->cacheProvider->save(
-                $countKey,
-                $body,
-                7200
-            );
-        }
+            if (null !== $this->cacheProvider) {
+                $this->cacheProvider->save(
+                    $countKey,
+                    $body,
+                    $this->ttl
+                );
+            }
 
-        return $body->statuses;
+            return $body->statuses;
+        } catch (TwitterOAuthException $e) {
+            return [
+                'error' => $e->getMessage(),
+            ];
+        }
     }
 
     /**

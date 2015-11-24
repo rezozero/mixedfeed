@@ -26,6 +26,7 @@
 namespace RZ\MixedFeed;
 
 use Abraham\TwitterOAuth\TwitterOAuth;
+use Abraham\TwitterOAuth\TwitterOAuthException;
 use Doctrine\Common\Cache\CacheProvider;
 use RZ\MixedFeed\AbstractFeedProvider;
 use RZ\MixedFeed\Exception\CredentialsException;
@@ -106,25 +107,30 @@ class TwitterFeed extends AbstractFeedProvider
     {
         $countKey = $this->cacheKey . $count;
 
-        if (null !== $this->cacheProvider &&
-            $this->cacheProvider->contains($countKey)) {
-            return $this->cacheProvider->fetch($countKey);
+        try {
+            if (null !== $this->cacheProvider &&
+                $this->cacheProvider->contains($countKey)) {
+                return $this->cacheProvider->fetch($countKey);
+            }
+            $body = $this->twitterConnection->get("statuses/user_timeline", [
+                "user_id" => $this->userId,
+                "count" => $count,
+                "exclude_replies" => $this->excludeReplies,
+                'include_rts' => $this->includeRts,
+            ]);
+            if (null !== $this->cacheProvider) {
+                $this->cacheProvider->save(
+                    $countKey,
+                    $body,
+                    $this->ttl
+                );
+            }
+            return $body;
+        } catch (TwitterOAuthException $e) {
+            return [
+                'error' => $e->getMessage(),
+            ];
         }
-        $body = $this->twitterConnection->get("statuses/user_timeline", [
-            "user_id" => $this->userId,
-            "count" => $count,
-            "exclude_replies" => $this->excludeReplies,
-            'include_rts' => $this->includeRts,
-        ]);
-        if (null !== $this->cacheProvider) {
-            $this->cacheProvider->save(
-                $countKey,
-                $body,
-                7200
-            );
-        }
-
-        return $body;
     }
 
     /**
