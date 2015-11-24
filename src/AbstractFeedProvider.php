@@ -34,6 +34,7 @@ use RZ\MixedFeed\FeedProviderInterface;
  */
 abstract class AbstractFeedProvider implements FeedProviderInterface
 {
+    protected $ttl = 7200;
 
     /**
      * {@inheritdoc}
@@ -55,5 +56,29 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
         } else {
             throw new FeedProviderErrorException($this->getFeedPlatform(), $this->getErrors($list));
         }
+    }
+
+    /**
+     * Gets the value of ttl.
+     *
+     * @return integer
+     */
+    public function getTtl()
+    {
+        return $this->ttl;
+    }
+
+    /**
+     * Sets the value of ttl.
+     *
+     * @param integer $ttl the ttl
+     *
+     * @return self
+     */
+    public function setTtl($ttl)
+    {
+        $this->ttl = $ttl;
+
+        return $this;
     }
 }

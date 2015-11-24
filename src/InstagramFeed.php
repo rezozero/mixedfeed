@@ -78,7 +78,7 @@ class InstagramFeed extends AbstractFeedProvider
                 $this->cacheProvider->save(
                     $countKey,
                     $body->data,
-                    7200
+                    $this->ttl
                 );
             }
 
