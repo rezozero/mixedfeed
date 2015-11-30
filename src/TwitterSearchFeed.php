@@ -64,7 +64,7 @@ class TwitterSearchFeed extends AbstractFeedProvider
         $this->queryParams = array_filter($queryParams);
         $this->accessToken = $accessToken;
         $this->cacheProvider = $cacheProvider;
-        $this->cacheKey = $this->getFeedPlatform() . $this->userId;
+        $this->cacheKey = $this->getFeedPlatform() . md5(serialize($queryParams));
 
         if (null === $accessToken ||
             false === $accessToken ||
@@ -125,7 +125,7 @@ class TwitterSearchFeed extends AbstractFeedProvider
             if (null !== $this->cacheProvider) {
                 $this->cacheProvider->save(
                     $countKey,
-                    $body,
+                    $body->statuses,
                     $this->ttl
                 );
             }
