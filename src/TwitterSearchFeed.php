@@ -102,7 +102,11 @@ class TwitterSearchFeed extends AbstractFeedProvider
     {
         $inlineParams = [];
         foreach ($this->queryParams as $key => $value) {
-            $inlineParams[] = $key . ':' . $value;
+            if (is_numeric($key)) {
+                $inlineParams[] = $value;
+            } else {
+                $inlineParams[] = $key . ':' . $value;
+            }
         }
 
         return implode(' ', $inlineParams);
@@ -117,6 +121,7 @@ class TwitterSearchFeed extends AbstractFeedProvider
                 $this->cacheProvider->contains($countKey)) {
                 return $this->cacheProvider->fetch($countKey);
             }
+
             $body = $this->twitterConnection->get("search/tweets", [
                 "q" => $this->formatQueryParams(),
                 "count" => $count,

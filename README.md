@@ -32,6 +32,7 @@ $feed = new MixedFeed([
     ),
     new TwitterSearchFeed(
         [
+            '#art', // do not specify a key for string searchs
             'from' => 'rezo_zero',
             'since' => '2015-11-01',
             'until' => '2015-11-30',
