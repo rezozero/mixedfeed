@@ -25,11 +25,9 @@
  */
 namespace RZ\MixedFeed;
 
-use Abraham\TwitterOAuth\TwitterOAuth;
 use Abraham\TwitterOAuth\TwitterOAuthException;
 use Doctrine\Common\Cache\CacheProvider;
 use RZ\MixedFeed\AbstractFeedProvider\AbstractTwitterFeed;
-use RZ\MixedFeed\Exception\CredentialsException;
 
 /**
  * Get a Twitter user timeline feed.
