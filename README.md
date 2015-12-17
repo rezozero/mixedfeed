@@ -1,6 +1,7 @@
 # mixedfeed
 A PHP library to get social networks feeds and merge them
 
+[![SensioLabsInsight](https://insight.sensiolabs.com/projects/ed3544de-7d64-4ef9-a551-c61a66fb668d/mini.png)](https://insight.sensiolabs.com/projects/ed3544de-7d64-4ef9-a551-c61a66fb668d)
 ![License](http://img.shields.io/:license-mit-blue.svg)
 
 ## Install
