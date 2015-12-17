@@ -72,7 +72,7 @@ class MixedFeed extends AbstractFeedProvider
                 }
             }
 
-            usort($list, function ($a, $b) {
+            usort($list, function (\stdClass $a, \stdClass $b) {
                 $aDT = $a->normalizedDate;
                 $bDT = $b->normalizedDate;
 

@@ -28,13 +28,13 @@ namespace RZ\MixedFeed;
 use Abraham\TwitterOAuth\TwitterOAuth;
 use Abraham\TwitterOAuth\TwitterOAuthException;
 use Doctrine\Common\Cache\CacheProvider;
-use RZ\MixedFeed\AbstractFeedProvider;
+use RZ\MixedFeed\AbstractFeedProvider\AbstractTwitterFeed;
 use RZ\MixedFeed\Exception\CredentialsException;
 
 /**
  * Get a Twitter user timeline feed.
  */
-class TwitterFeed extends AbstractFeedProvider
+class TwitterFeed extends AbstractTwitterFeed
 {
     protected $userId;
     protected $accessToken;
@@ -67,40 +67,19 @@ class TwitterFeed extends AbstractFeedProvider
         $excludeReplies = true,
         $includeRts = false
     ) {
-        $this->userId = $userId;
-        $this->accessToken = $accessToken;
-        $this->cacheProvider = $cacheProvider;
-        $this->excludeReplies = $excludeReplies;
-        $this->includeRts = $includeRts;
-        $this->cacheKey = $this->getFeedPlatform() . $this->userId;
 
-        if (null === $accessToken ||
-            false === $accessToken ||
-            empty($accessToken)) {
-            throw new CredentialsException("TwitterFeed needs a valid access token.", 1);
-        }
-        if (null === $accessTokenSecret ||
-            false === $accessTokenSecret ||
-            empty($accessTokenSecret)) {
-            throw new CredentialsException("TwitterFeed needs a valid access token secret.", 1);
-        }
-        if (null === $consumerKey ||
-            false === $consumerKey ||
-            empty($consumerKey)) {
-            throw new CredentialsException("TwitterFeed needs a valid consumer key.", 1);
-        }
-        if (null === $consumerSecret ||
-            false === $consumerSecret ||
-            empty($consumerSecret)) {
-            throw new CredentialsException("TwitterFeed needs a valid consumer secret.", 1);
-        }
-
-        $this->twitterConnection = new TwitterOAuth(
+        parent::__construct(
             $consumerKey,
             $consumerSecret,
             $accessToken,
-            $accessTokenSecret
+            $accessTokenSecret,
+            $cacheProvider
         );
+
+        $this->userId = $userId;
+        $this->excludeReplies = $excludeReplies;
+        $this->includeRts = $includeRts;
+        $this->cacheKey = $this->getFeedPlatform() . $this->userId;
     }
 
     protected function getFeed($count = 5)
@@ -131,56 +110,5 @@ class TwitterFeed extends AbstractFeedProvider
                 'error' => $e->getMessage(),
             ];
         }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getDateTime($item)
-    {
-        $date = new \DateTime();
-        $date->setTimestamp(strtotime($item->created_at));
-        return $date;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getCanonicalMessage($item)
-    {
-        return $item->text;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getFeedPlatform()
-    {
-        return 'twitter';
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function isValid($feed)
-    {
-        return null !== $feed && is_array($feed);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getErrors($feed)
-    {
-        $errors = "";
-
-        if (null !== $feed && null !== $feed->errors && !empty($feed->errors)) {
-            foreach ($feed->errors as $error) {
-                $errors .= "[" . $error->code . "] ";
-                $errors .= $error->message . PHP_EOL;
-            }
-        }
-
-        return $errors;
     }
 }

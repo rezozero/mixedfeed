@@ -57,8 +57,9 @@ class GithubReleasesFeed extends AbstractFeedProvider
     ) {
         $this->repository = $repository;
         $this->accessToken = $accessToken;
+        $this->cacheProvider = $cacheProvider;
         $this->page = $page;
-        $this->cacheKey = $this->getFeedPlatform() . $this->repository;
+        $this->cacheKey = $this->getFeedPlatform() . $this->repository . $this->page;
 
         if (null === $repository ||
             false === $repository ||
@@ -144,7 +145,7 @@ class GithubReleasesFeed extends AbstractFeedProvider
      */
     public function isValid($feed)
     {
-        return null !== $feed && is_array($feed);
+        return null !== $feed && is_array($feed) && !isset($feed['error']);
     }
 
     /**
@@ -154,11 +155,8 @@ class GithubReleasesFeed extends AbstractFeedProvider
     {
         $errors = "";
 
-        if (null !== $feed && null !== $feed->errors && !empty($feed->errors)) {
-            foreach ($feed->errors as $error) {
-                $errors .= "[" . $error->code . "] ";
-                $errors .= $error->message . PHP_EOL;
-            }
+        if (null !== $feed && null !== $feed['error'] && !empty($feed['error'])) {
+            $errors .= $feed['error'];
         }
 
         return $errors;

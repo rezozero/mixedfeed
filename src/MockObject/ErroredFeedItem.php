@@ -40,5 +40,6 @@ class ErroredFeedItem
         $this->message = $message;
         $this->feedItemPlatform = $feedItemPlatform . '[errored]';
         $this->normalizedDate = new \Datetime('now');
+        $this->canonicalMessage = $message;
     }
 }
