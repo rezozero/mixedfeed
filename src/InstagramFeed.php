@@ -103,6 +103,18 @@ class InstagramFeed extends AbstractFeedProvider
     /**
      * {@inheritdoc}
      */
+    public function getCanonicalMessage($item)
+    {
+        if (null !== $item->caption) {
+            return $item->caption->text;
+        }
+
+        return "";
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getFeedPlatform()
     {
         return 'instagram';

@@ -116,6 +116,14 @@ class PinterestBoardFeed extends AbstractFeedProvider
     /**
      * {@inheritdoc}
      */
+    public function getCanonicalMessage($item)
+    {
+        return $item->note;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getFeedPlatform()
     {
         return 'pinterest_board';

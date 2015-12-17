@@ -20,96 +20,61 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * @file TwitterSearchFeed.php
+ * @file GithubCommitsFeed.php
  * @author Ambroise Maupate
  */
 namespace RZ\MixedFeed;
 
-use Abraham\TwitterOAuth\TwitterOAuth;
-use Abraham\TwitterOAuth\TwitterOAuthException;
 use Doctrine\Common\Cache\CacheProvider;
+use GuzzleHttp\Exception\ClientException;
 use RZ\MixedFeed\AbstractFeedProvider;
 use RZ\MixedFeed\Exception\CredentialsException;
 
 /**
- * Get a Twitter search tweets feed.
+ * Get a github repository commits feed.
  */
-class TwitterSearchFeed extends AbstractFeedProvider
+class GithubCommitsFeed extends AbstractFeedProvider
 {
+    protected $repository;
     protected $accessToken;
     protected $cacheProvider;
     protected $cacheKey;
-    protected $twitterConnection;
-    protected $queryParams;
+    protected $page;
 
-    protected static $timeKey = 'created_at';
+    protected static $timeKey = 'date';
 
     /**
      *
-     * @param array              $queryParams
-     * @param string             $consumerKey
-     * @param string             $consumerSecret
+     * @param string             $repository
      * @param string             $accessToken
-     * @param string             $accessTokenSecret
      * @param CacheProvider|null $cacheProvider
      */
     public function __construct(
-        array $queryParams,
-        $consumerKey,
-        $consumerSecret,
+        $repository,
         $accessToken,
-        $accessTokenSecret,
-        CacheProvider $cacheProvider = null
+        CacheProvider $cacheProvider = null,
+        $page = 1
     ) {
-        $this->queryParams = array_filter($queryParams);
+        $this->repository = $repository;
         $this->accessToken = $accessToken;
-        $this->cacheProvider = $cacheProvider;
-        $this->cacheKey = $this->getFeedPlatform() . md5(serialize($queryParams));
+        $this->page = $page;
+        $this->cacheKey = $this->getFeedPlatform() . $this->repository;
+
+        if (null === $repository ||
+            false === $repository ||
+            empty($repository)) {
+            throw new CredentialsException("GithubCommitsFeed needs a valid repository name.", 1);
+        }
+
+        if (0 === preg_match('#([a-zA-Z\-\_0-9\.]+)/([a-zA-Z\-\_0-9\.]+)#', $repository)) {
+            throw new CredentialsException("GithubCommitsFeed needs a valid repository name “user/project”.", 1);
+        }
 
         if (null === $accessToken ||
             false === $accessToken ||
             empty($accessToken)) {
-            throw new CredentialsException("TwitterSearchFeed needs a valid access token.", 1);
+            throw new CredentialsException("GithubCommitsFeed needs a valid access token.", 1);
         }
-        if (null === $accessTokenSecret ||
-            false === $accessTokenSecret ||
-            empty($accessTokenSecret)) {
-            throw new CredentialsException("TwitterSearchFeed needs a valid access token secret.", 1);
-        }
-        if (null === $consumerKey ||
-            false === $consumerKey ||
-            empty($consumerKey)) {
-            throw new CredentialsException("TwitterSearchFeed needs a valid consumer key.", 1);
-        }
-        if (null === $consumerSecret ||
-            false === $consumerSecret ||
-            empty($consumerSecret)) {
-            throw new CredentialsException("TwitterSearchFeed needs a valid consumer secret.", 1);
-        }
-
-        $this->twitterConnection = new TwitterOAuth(
-            $consumerKey,
-            $consumerSecret,
-            $accessToken,
-            $accessTokenSecret
-        );
-    }
-
-    /**
-     * @return string
-     */
-    protected function formatQueryParams()
-    {
-        $inlineParams = [];
-        foreach ($this->queryParams as $key => $value) {
-            if (is_numeric($key)) {
-                $inlineParams[] = $value;
-            } else {
-                $inlineParams[] = $key . ':' . $value;
-            }
-        }
-
-        return implode(' ', $inlineParams);
     }
 
     protected function getFeed($count = 5)
@@ -122,21 +87,26 @@ class TwitterSearchFeed extends AbstractFeedProvider
                 return $this->cacheProvider->fetch($countKey);
             }
 
-            $body = $this->twitterConnection->get("search/tweets", [
-                "q" => $this->formatQueryParams(),
-                "count" => $count,
+            $client = new \GuzzleHttp\Client();
+            $response = $client->get('https://api.github.com/repos/' . $this->repository . '/commits', [
+                'query' => [
+                    'access_token' => $this->accessToken,
+                    'per_page' => $count,
+                    'token_type' => 'bearer',
+                    'page' => $this->page,
+                ],
             ]);
+            $body = json_decode($response->getBody());
 
             if (null !== $this->cacheProvider) {
                 $this->cacheProvider->save(
                     $countKey,
-                    $body->statuses,
+                    $body,
                     $this->ttl
                 );
             }
-
-            return $body->statuses;
-        } catch (TwitterOAuthException $e) {
+            return $body;
+        } catch (ClientException $e) {
             return [
                 'error' => $e->getMessage(),
             ];
@@ -149,7 +119,7 @@ class TwitterSearchFeed extends AbstractFeedProvider
     public function getDateTime($item)
     {
         $date = new \DateTime();
-        $date->setTimestamp(strtotime($item->created_at));
+        $date->setTimestamp(strtotime($item->commit->author->date));
         return $date;
     }
 
@@ -158,7 +128,7 @@ class TwitterSearchFeed extends AbstractFeedProvider
      */
     public function getCanonicalMessage($item)
     {
-        return $item->text;
+        return $item->commit->message;
     }
 
     /**
@@ -166,7 +136,7 @@ class TwitterSearchFeed extends AbstractFeedProvider
      */
     public function getFeedPlatform()
     {
-        return 'twitter';
+        return 'github_commit';
     }
 
     /**

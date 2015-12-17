@@ -137,6 +137,14 @@ class FacebookPageFeed extends AbstractFeedProvider
     /**
      * {@inheritdoc}
      */
+    public function getCanonicalMessage($item)
+    {
+        return $item->message;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getFeedPlatform()
     {
         return 'facebook_page';

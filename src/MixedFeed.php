@@ -106,6 +106,14 @@ class MixedFeed extends AbstractFeedProvider
     /**
      * {@inheritdoc}
      */
+    public function getCanonicalMessage($item)
+    {
+        return "";
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function isValid($feed)
     {
         return true;

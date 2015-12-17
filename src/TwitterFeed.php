@@ -146,6 +146,14 @@ class TwitterFeed extends AbstractFeedProvider
     /**
      * {@inheritdoc}
      */
+    public function getCanonicalMessage($item)
+    {
+        return $item->text;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getFeedPlatform()
     {
         return 'twitter';
