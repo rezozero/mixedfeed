@@ -72,7 +72,7 @@ class MixedFeed extends AbstractFeedProvider
                 }
             }
 
-            usort($list, function ($a, $b) {
+            usort($list, function (\stdClass $a, \stdClass $b) {
                 $aDT = $a->normalizedDate;
                 $bDT = $b->normalizedDate;
 
@@ -101,6 +101,14 @@ class MixedFeed extends AbstractFeedProvider
     public function getDateTime($item)
     {
         return new \DateTime('now');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getCanonicalMessage($item)
+    {
+        return "";
     }
 
     /**

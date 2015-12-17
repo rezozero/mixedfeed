@@ -45,12 +45,13 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
 
         if ($this->isValid($list)) {
             /*
-             * Need to inject feed item platform
+             * Need to inject feed item platform, normalizedDate and canonicalMessage
              * to be able to merge them with other types
              */
             foreach ($list as $item) {
                 $item->feedItemPlatform = $this->getFeedPlatform();
                 $item->normalizedDate = $this->getDateTime($item);
+                $item->canonicalMessage = $this->getCanonicalMessage($item);
             }
             return $list;
         } else {

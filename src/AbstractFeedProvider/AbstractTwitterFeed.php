@@ -20,87 +20,74 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * @file PinterestBoardFeed.php
+ * @file AbstractTwitterFeed.php
  * @author Ambroise Maupate
  */
-namespace RZ\MixedFeed;
+namespace RZ\MixedFeed\AbstractFeedProvider;
 
+use Abraham\TwitterOAuth\TwitterOAuth;
 use Doctrine\Common\Cache\CacheProvider;
-use GuzzleHttp\Exception\ClientException;
 use RZ\MixedFeed\AbstractFeedProvider;
 use RZ\MixedFeed\Exception\CredentialsException;
+use RZ\MixedFeed\AbstractFeedProvider as BaseFeedProvider;
 
 /**
- * Get a Pinterest public board pins feed.
- *
- * https://developers.pinterest.com/tools/access_token/
+ * Get a Twitter tweets abstract feed.
  */
-class PinterestBoardFeed extends AbstractFeedProvider
+class AbstractTwitterFeed extends BaseFeedProvider
 {
-    protected $boardId;
     protected $accessToken;
     protected $cacheProvider;
-    protected $cacheKey;
+    protected $twitterConnection;
 
     protected static $timeKey = 'created_at';
 
     /**
      *
-     * @param string             $boardId
-     * @param string             $accessToken Your App Token
+     * @param array              $queryParams
+     * @param string             $consumerKey
+     * @param string             $consumerSecret
+     * @param string             $accessToken
+     * @param string             $accessTokenSecret
      * @param CacheProvider|null $cacheProvider
      */
     public function __construct(
-        $boardId,
+        $consumerKey,
+        $consumerSecret,
         $accessToken,
+        $accessTokenSecret,
         CacheProvider $cacheProvider = null
     ) {
-        $this->boardId = $boardId;
         $this->accessToken = $accessToken;
         $this->cacheProvider = $cacheProvider;
-        $this->cacheKey = $this->getFeedPlatform() . $this->boardId;
 
-        if (null === $this->accessToken ||
-            false === $this->accessToken ||
-            empty($this->accessToken)) {
-            throw new CredentialsException("PinterestBoardFeed needs a valid access token.", 1);
+        if (null === $accessToken ||
+            false === $accessToken ||
+            empty($accessToken)) {
+            throw new CredentialsException("TwitterSearchFeed needs a valid access token.", 1);
         }
-    }
-
-    protected function getFeed($count = 5)
-    {
-        try {
-            $countKey = $this->cacheKey . $count;
-
-            if (null !== $this->cacheProvider &&
-                $this->cacheProvider->contains($countKey)) {
-                return $this->cacheProvider->fetch($countKey);
-            }
-
-            $client = new \GuzzleHttp\Client();
-            $response = $client->get('https://api.pinterest.com/v1/boards/' . $this->boardId . '/pins/', [
-                'query' => [
-                    'access_token' => $this->accessToken,
-                    'limit' => $count,
-                    'fields' => 'id,color,created_at,creator,media,image[original],note,link,url',
-                ],
-            ]);
-            $body = json_decode($response->getBody());
-
-            if (null !== $this->cacheProvider) {
-                $this->cacheProvider->save(
-                    $countKey,
-                    $body->data,
-                    $this->ttl
-                );
-            }
-
-            return $body->data;
-        } catch (ClientException $e) {
-            return [
-                'error' => $e->getMessage(),
-            ];
+        if (null === $accessTokenSecret ||
+            false === $accessTokenSecret ||
+            empty($accessTokenSecret)) {
+            throw new CredentialsException("TwitterSearchFeed needs a valid access token secret.", 1);
         }
+        if (null === $consumerKey ||
+            false === $consumerKey ||
+            empty($consumerKey)) {
+            throw new CredentialsException("TwitterSearchFeed needs a valid consumer key.", 1);
+        }
+        if (null === $consumerSecret ||
+            false === $consumerSecret ||
+            empty($consumerSecret)) {
+            throw new CredentialsException("TwitterSearchFeed needs a valid consumer secret.", 1);
+        }
+
+        $this->twitterConnection = new TwitterOAuth(
+            $consumerKey,
+            $consumerSecret,
+            $accessToken,
+            $accessTokenSecret
+        );
     }
 
     /**
@@ -118,7 +105,7 @@ class PinterestBoardFeed extends AbstractFeedProvider
      */
     public function getCanonicalMessage($item)
     {
-        return $item->note;
+        return $item->text;
     }
 
     /**
@@ -126,7 +113,7 @@ class PinterestBoardFeed extends AbstractFeedProvider
      */
     public function getFeedPlatform()
     {
-        return 'pinterest_board';
+        return 'twitter';
     }
 
     /**
@@ -134,7 +121,7 @@ class PinterestBoardFeed extends AbstractFeedProvider
      */
     public function isValid($feed)
     {
-        return null !== $feed && is_array($feed) && !isset($feed['error']);
+        return null !== $feed && is_array($feed);
     }
 
     /**
@@ -142,6 +129,15 @@ class PinterestBoardFeed extends AbstractFeedProvider
      */
     public function getErrors($feed)
     {
-        return $feed['error'];
+        $errors = "";
+
+        if (null !== $feed && null !== $feed->errors && !empty($feed->errors)) {
+            foreach ($feed->errors as $error) {
+                $errors .= "[" . $error->code . "] ";
+                $errors .= $error->message . PHP_EOL;
+            }
+        }
+
+        return $errors;
     }
 }

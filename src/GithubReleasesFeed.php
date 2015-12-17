@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * @file PinterestBoardFeed.php
+ * @file GithubReleasesFeed.php
  * @author Ambroise Maupate
  */
 namespace RZ\MixedFeed;
@@ -31,58 +31,70 @@ use RZ\MixedFeed\AbstractFeedProvider;
 use RZ\MixedFeed\Exception\CredentialsException;
 
 /**
- * Get a Pinterest public board pins feed.
- *
- * https://developers.pinterest.com/tools/access_token/
+ * Get a github repository releases feed.
  */
-class PinterestBoardFeed extends AbstractFeedProvider
+class GithubReleasesFeed extends AbstractFeedProvider
 {
-    protected $boardId;
+    protected $repository;
     protected $accessToken;
     protected $cacheProvider;
     protected $cacheKey;
+    protected $page;
 
     protected static $timeKey = 'created_at';
 
     /**
      *
-     * @param string             $boardId
-     * @param string             $accessToken Your App Token
+     * @param string             $repository
+     * @param string             $accessToken
      * @param CacheProvider|null $cacheProvider
      */
     public function __construct(
-        $boardId,
+        $repository,
         $accessToken,
-        CacheProvider $cacheProvider = null
+        CacheProvider $cacheProvider = null,
+        $page = 1
     ) {
-        $this->boardId = $boardId;
+        $this->repository = $repository;
         $this->accessToken = $accessToken;
         $this->cacheProvider = $cacheProvider;
-        $this->cacheKey = $this->getFeedPlatform() . $this->boardId;
+        $this->page = $page;
+        $this->cacheKey = $this->getFeedPlatform() . $this->repository . $this->page;
 
-        if (null === $this->accessToken ||
-            false === $this->accessToken ||
-            empty($this->accessToken)) {
-            throw new CredentialsException("PinterestBoardFeed needs a valid access token.", 1);
+        if (null === $repository ||
+            false === $repository ||
+            empty($repository)) {
+            throw new CredentialsException("GithubReleasesFeed needs a valid repository name.", 1);
+        }
+
+        if (0 === preg_match('#([a-zA-Z\-\_0-9\.]+)/([a-zA-Z\-\_0-9\.]+)#', $repository)) {
+            throw new CredentialsException("GithubReleasesFeed needs a valid repository name “user/project”.", 1);
+        }
+
+        if (null === $accessToken ||
+            false === $accessToken ||
+            empty($accessToken)) {
+            throw new CredentialsException("GithubReleasesFeed needs a valid access token.", 1);
         }
     }
 
     protected function getFeed($count = 5)
     {
-        try {
-            $countKey = $this->cacheKey . $count;
+        $countKey = $this->cacheKey . $count;
 
+        try {
             if (null !== $this->cacheProvider &&
                 $this->cacheProvider->contains($countKey)) {
                 return $this->cacheProvider->fetch($countKey);
             }
 
             $client = new \GuzzleHttp\Client();
-            $response = $client->get('https://api.pinterest.com/v1/boards/' . $this->boardId . '/pins/', [
+            $response = $client->get('https://api.github.com/repos/' . $this->repository . '/releases', [
                 'query' => [
                     'access_token' => $this->accessToken,
-                    'limit' => $count,
-                    'fields' => 'id,color,created_at,creator,media,image[original],note,link,url',
+                    'per_page' => $count,
+                    'token_type' => 'bearer',
+                    'page' => $this->page,
                 ],
             ]);
             $body = json_decode($response->getBody());
@@ -90,12 +102,11 @@ class PinterestBoardFeed extends AbstractFeedProvider
             if (null !== $this->cacheProvider) {
                 $this->cacheProvider->save(
                     $countKey,
-                    $body->data,
+                    $body,
                     $this->ttl
                 );
             }
-
-            return $body->data;
+            return $body;
         } catch (ClientException $e) {
             return [
                 'error' => $e->getMessage(),
@@ -118,7 +129,7 @@ class PinterestBoardFeed extends AbstractFeedProvider
      */
     public function getCanonicalMessage($item)
     {
-        return $item->note;
+        return $item->name;
     }
 
     /**
@@ -126,7 +137,7 @@ class PinterestBoardFeed extends AbstractFeedProvider
      */
     public function getFeedPlatform()
     {
-        return 'pinterest_board';
+        return 'github_release';
     }
 
     /**
@@ -142,6 +153,12 @@ class PinterestBoardFeed extends AbstractFeedProvider
      */
     public function getErrors($feed)
     {
-        return $feed['error'];
+        $errors = "";
+
+        if (null !== $feed && null !== $feed['error'] && !empty($feed['error'])) {
+            $errors .= $feed['error'];
+        }
+
+        return $errors;
     }
 }

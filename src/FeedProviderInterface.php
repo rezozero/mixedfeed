@@ -68,4 +68,12 @@ interface FeedProviderInterface
      * @return string
      */
     public function getErrors($feed);
+
+    /**
+     * Get a canonical message from current feed item.
+     *
+     * @param  stdClass $item
+     * @return string
+     */
+    public function getCanonicalMessage($item);
 }
