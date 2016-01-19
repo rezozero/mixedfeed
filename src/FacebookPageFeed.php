@@ -139,7 +139,7 @@ class FacebookPageFeed extends AbstractFeedProvider
      */
     public function getCanonicalMessage($item)
     {
-        return $item->message;
+        return isset($item->message) ? $item->message : '';
     }
 
     /**

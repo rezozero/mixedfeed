@@ -29,7 +29,7 @@ namespace RZ\MixedFeed\MockObject;
  * ErroredFeedItem for displaying something even if feed
  * provider errored.
  */
-class ErroredFeedItem
+class ErroredFeedItem extends \stdClass
 {
     public $normalizedDate;
     public $message;
