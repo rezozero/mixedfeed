@@ -6,10 +6,6 @@ vendor/
 # You may choose to ignore a library lock file http://getcomposer.org/doc/02-libraries.md#lock-file
 composer.lock
 
-# Icon must end with two \r
-Icon
-
-
 # Thumbnails
 ._*
 
