@@ -18,9 +18,9 @@
         "rezo zero"
     ],
     "require": {
-        "abraham/twitteroauth": "^0.6.1",
-        "doctrine/cache": "^1.4",
-        "guzzlehttp/guzzle": "~5.0"
+        "abraham/twitteroauth": "^0.7.2",
+        "doctrine/cache": "^1.6",
+        "guzzlehttp/guzzle": "^6.2"
     },
     "autoload": {
         "psr-4": {"RZ\\MixedFeed\\": "src/"}
