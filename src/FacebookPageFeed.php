@@ -65,7 +65,7 @@ class FacebookPageFeed extends AbstractFeedProvider
         $this->cacheProvider = $cacheProvider;
         $this->cacheKey = $this->getFeedPlatform() . $this->pageId;
 
-        $this->fields = ['link', 'picture', 'message', 'story', 'type', 'created_time', 'source', 'status_type'];
+        $this->fields = ['link', 'picture', 'full_picture', 'message', 'story', 'type', 'created_time', 'source', 'status_type'];
         $this->fields = array_unique(array_merge($this->fields, $fields));
 
         if (null === $this->accessToken ||
