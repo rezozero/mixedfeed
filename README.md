@@ -32,6 +32,9 @@ $feed = new MixedFeed([
         'twitter_access_token',
         'twitter_access_token_secret',
         // you can add a doctrine cache provider
+        // exclude replies true/false
+        // include retweets true/false
+        // extended mode true/false
     ),
     new TwitterSearchFeed(
         [

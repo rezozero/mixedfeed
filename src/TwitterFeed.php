@@ -63,7 +63,8 @@ class TwitterFeed extends AbstractTwitterFeed
         $accessTokenSecret,
         CacheProvider $cacheProvider = null,
         $excludeReplies = true,
-        $includeRts = false
+        $includeRts = false,
+        $extended = false
     ) {
 
         parent::__construct(
@@ -77,6 +78,7 @@ class TwitterFeed extends AbstractTwitterFeed
         $this->userId = $userId;
         $this->excludeReplies = $excludeReplies;
         $this->includeRts = $includeRts;
+        $this->extended = $extended;
         $this->cacheKey = $this->getFeedPlatform() . $this->userId;
     }
 
@@ -94,6 +96,7 @@ class TwitterFeed extends AbstractTwitterFeed
                 "count" => $count,
                 "exclude_replies" => $this->excludeReplies,
                 'include_rts' => $this->includeRts,
+                'tweet_mode' =>  ($this->extended ? 'extended' : '')
             ]);
             if (null !== $this->cacheProvider) {
                 $this->cacheProvider->save(

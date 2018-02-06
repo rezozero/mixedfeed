@@ -105,7 +105,11 @@ class AbstractTwitterFeed extends BaseFeedProvider
      */
     public function getCanonicalMessage($item)
     {
-        return $item->text;
+        if (isset($item->text)) {
+            return $item->text;
+        }
+
+        return $item->full_text;
     }
 
     /**
