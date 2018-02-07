@@ -25,10 +25,12 @@
  */
 namespace RZ\MixedFeed\Exception;
 
+use Throwable;
+
 class CredentialsException extends \Exception
 {
-    public function __construct($message = "Unsufficient authentification data found.")
+    public function __construct($message = "Unsufficient authentification data found.", $code = 0, Throwable $previous = null)
     {
-        parent::__construct($message, 1);
+        parent::__construct($message, $code, $previous);
     }
 }

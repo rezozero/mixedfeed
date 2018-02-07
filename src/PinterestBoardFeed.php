@@ -26,8 +26,8 @@
 namespace RZ\MixedFeed;
 
 use Doctrine\Common\Cache\CacheProvider;
+use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
-use RZ\MixedFeed\AbstractFeedProvider;
 use RZ\MixedFeed\Exception\CredentialsException;
 
 /**
@@ -46,9 +46,10 @@ class PinterestBoardFeed extends AbstractFeedProvider
 
     /**
      *
-     * @param string             $boardId
-     * @param string             $accessToken Your App Token
+     * @param string $boardId
+     * @param string $accessToken Your App Token
      * @param CacheProvider|null $cacheProvider
+     * @throws CredentialsException
      */
     public function __construct(
         $boardId,
@@ -77,7 +78,7 @@ class PinterestBoardFeed extends AbstractFeedProvider
                 return $this->cacheProvider->fetch($countKey);
             }
 
-            $client = new \GuzzleHttp\Client();
+            $client = new Client();
             $response = $client->get('https://api.pinterest.com/v1/boards/' . $this->boardId . '/pins/', [
                 'query' => [
                     'access_token' => $this->accessToken,

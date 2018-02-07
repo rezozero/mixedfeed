@@ -26,8 +26,8 @@
 namespace RZ\MixedFeed;
 
 use Doctrine\Common\Cache\CacheProvider;
+use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
-use RZ\MixedFeed\AbstractFeedProvider;
 use RZ\MixedFeed\Exception\CredentialsException;
 
 /**
@@ -42,17 +42,24 @@ class FacebookPageFeed extends AbstractFeedProvider
     protected $cacheProvider;
     protected $cacheKey;
     protected $fields;
+    /**
+     * @var \DateTime|null
+     */
     protected $since = null;
+    /**
+     * @var \DateTime|null
+     */
     protected $until = null;
 
     protected static $timeKey = 'created_time';
 
     /**
      *
-     * @param string             $pageId
-     * @param string             $accessToken Your App Token
+     * @param string $pageId
+     * @param string $accessToken Your App Token
      * @param CacheProvider|null $cacheProvider
-     * @param array              $fields
+     * @param array $fields
+     * @throws CredentialsException
      */
     public function __construct(
         $pageId,
@@ -85,7 +92,7 @@ class FacebookPageFeed extends AbstractFeedProvider
                 return $this->cacheProvider->fetch($countKey);
             }
 
-            $client = new \GuzzleHttp\Client();
+            $client = new Client();
             $params = [
                 'query' => [
                     'access_token' => $this->accessToken,

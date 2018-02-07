@@ -37,16 +37,30 @@ class TwitterSearchFeed extends AbstractTwitterFeed
     protected $cacheKey;
     protected $queryParams;
 
+    /**
+     * @var bool
+     */
+    protected $includeRetweets = true;
+
+    /**
+     * @var string
+     */
+    protected $resultType = 'mixed';
+
+    /**
+     * @var string
+     */
     protected static $timeKey = 'created_at';
 
     /**
      *
-     * @param array              $queryParams
-     * @param string             $consumerKey
-     * @param string             $consumerSecret
-     * @param string             $accessToken
-     * @param string             $accessTokenSecret
+     * @param array $queryParams
+     * @param string $consumerKey
+     * @param string $consumerSecret
+     * @param string $accessToken
+     * @param string $accessTokenSecret
      * @param CacheProvider|null $cacheProvider
+     * @throws Exception\CredentialsException
      */
     public function __construct(
         array $queryParams,
@@ -95,10 +109,17 @@ class TwitterSearchFeed extends AbstractTwitterFeed
                 return $this->cacheProvider->fetch($countKey);
             }
 
-            $body = $this->twitterConnection->get("search/tweets", [
+            if ($this->includeRetweets === false) {
+                $this->queryParams['-filter'] = 'retweets';
+            }
+
+            $params = [
                 "q" => $this->formatQueryParams(),
                 "count" => $count,
-            ]);
+                "result_type" => $this->resultType,
+            ];
+
+            $body = $this->twitterConnection->get("search/tweets", $params);
 
             if (null !== $this->cacheProvider) {
                 $this->cacheProvider->save(
@@ -114,5 +135,46 @@ class TwitterSearchFeed extends AbstractTwitterFeed
                 'error' => $e->getMessage(),
             ];
         }
+    }
+
+    /**
+     * @return bool
+     */
+    public function isIncludeRetweets()
+    {
+        return $this->includeRetweets;
+    }
+
+    /**
+     * @param bool $includeRetweets
+     * @return TwitterSearchFeed
+     */
+    public function setIncludeRetweets($includeRetweets)
+    {
+        $this->includeRetweets = $includeRetweets;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getResultType()
+    {
+        return $this->resultType;
+    }
+
+    /**
+     * Optional. Specifies what type of search results you would prefer to receive. The current default is “mixed.” Valid values include:
+     * mixed : Include both popular and real time results in the response.
+     * recent : return only the most recent results in the response
+     * popular : return only the most popular results in the response.
+     *
+     * @param string $resultType
+     * @return TwitterSearchFeed
+     */
+    public function setResultType($resultType)
+    {
+        $this->resultType = $resultType;
+        return $this;
     }
 }

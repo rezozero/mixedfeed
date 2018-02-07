@@ -43,17 +43,23 @@ class TwitterFeed extends AbstractTwitterFeed
     protected $includeRts;
 
     protected static $timeKey = 'created_at';
+    /**
+     * @var bool
+     */
+    protected $extended;
 
     /**
      *
-     * @param string             $userId
-     * @param string             $consumerKey
-     * @param string             $consumerSecret
-     * @param string             $accessToken
-     * @param string             $accessTokenSecret
+     * @param string $userId
+     * @param string $consumerKey
+     * @param string $consumerSecret
+     * @param string $accessToken
+     * @param string $accessTokenSecret
      * @param CacheProvider|null $cacheProvider
-     * @param boolean            $excludeReplies
-     * @param boolean            $includeRts
+     * @param boolean $excludeReplies
+     * @param boolean $includeRts
+     * @param bool $extended
+     * @throws Exception\CredentialsException
      */
     public function __construct(
         $userId,
@@ -63,7 +69,8 @@ class TwitterFeed extends AbstractTwitterFeed
         $accessTokenSecret,
         CacheProvider $cacheProvider = null,
         $excludeReplies = true,
-        $includeRts = false
+        $includeRts = false,
+        $extended = false
     ) {
 
         parent::__construct(
@@ -77,6 +84,7 @@ class TwitterFeed extends AbstractTwitterFeed
         $this->userId = $userId;
         $this->excludeReplies = $excludeReplies;
         $this->includeRts = $includeRts;
+        $this->extended = $extended;
         $this->cacheKey = $this->getFeedPlatform() . $this->userId;
     }
 
@@ -94,6 +102,7 @@ class TwitterFeed extends AbstractTwitterFeed
                 "count" => $count,
                 "exclude_replies" => $this->excludeReplies,
                 'include_rts' => $this->includeRts,
+                'tweet_mode' =>  ($this->extended ? 'extended' : '')
             ]);
             if (null !== $this->cacheProvider) {
                 $this->cacheProvider->save(
