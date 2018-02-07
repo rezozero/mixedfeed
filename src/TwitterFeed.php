@@ -43,17 +43,23 @@ class TwitterFeed extends AbstractTwitterFeed
     protected $includeRts;
 
     protected static $timeKey = 'created_at';
+    /**
+     * @var bool
+     */
+    protected $extended;
 
     /**
      *
-     * @param string             $userId
-     * @param string             $consumerKey
-     * @param string             $consumerSecret
-     * @param string             $accessToken
-     * @param string             $accessTokenSecret
+     * @param string $userId
+     * @param string $consumerKey
+     * @param string $consumerSecret
+     * @param string $accessToken
+     * @param string $accessTokenSecret
      * @param CacheProvider|null $cacheProvider
-     * @param boolean            $excludeReplies
-     * @param boolean            $includeRts
+     * @param boolean $excludeReplies
+     * @param boolean $includeRts
+     * @param bool $extended
+     * @throws Exception\CredentialsException
      */
     public function __construct(
         $userId,

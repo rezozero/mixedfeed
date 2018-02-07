@@ -27,7 +27,6 @@ namespace RZ\MixedFeed;
 
 use Doctrine\Common\Cache\CacheProvider;
 use GuzzleHttp\Exception\ClientException;
-use RZ\MixedFeed\AbstractFeedProvider;
 use RZ\MixedFeed\Exception\CredentialsException;
 
 /**

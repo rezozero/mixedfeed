@@ -25,19 +25,18 @@
  */
 namespace RZ\MixedFeed;
 
-use RZ\MixedFeed\AbstractFeedProvider;
 use RZ\MixedFeed\Exception\FeedProviderErrorException;
 use RZ\MixedFeed\MockObject\ErroredFeedItem;
 
 /**
- * Combine feed providers and sort them antechronological.
+ * Combine feed providers and sort them ante-chronological.
  */
 class MixedFeed extends AbstractFeedProvider
 {
     protected $providers;
 
     /**
-     * Create a mixed feed composed of hetergeneous feed
+     * Create a mixed feed composed of heterogeneous feed
      * providers.
      *
      * @param array $providers
@@ -62,6 +61,7 @@ class MixedFeed extends AbstractFeedProvider
         if (count($this->providers) > 0) {
             $perProviderCount = floor($count / count($this->providers));
 
+            /** @var FeedProviderInterface $provider */
             foreach ($this->providers as $provider) {
                 try {
                     $list = array_merge($list, $provider->getItems($perProviderCount));
@@ -125,5 +125,13 @@ class MixedFeed extends AbstractFeedProvider
     public function getErrors($feed)
     {
         return '';
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function getFeed($count = 5)
+    {
+        trigger_error('getFeed method must not be called in MixedFeed.', E_USER_ERROR);
     }
 }

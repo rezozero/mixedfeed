@@ -54,12 +54,13 @@ class TwitterSearchFeed extends AbstractTwitterFeed
 
     /**
      *
-     * @param array              $queryParams
-     * @param string             $consumerKey
-     * @param string             $consumerSecret
-     * @param string             $accessToken
-     * @param string             $accessTokenSecret
+     * @param array $queryParams
+     * @param string $consumerKey
+     * @param string $consumerSecret
+     * @param string $accessToken
+     * @param string $accessTokenSecret
      * @param CacheProvider|null $cacheProvider
+     * @throws Exception\CredentialsException
      */
     public function __construct(
         array $queryParams,

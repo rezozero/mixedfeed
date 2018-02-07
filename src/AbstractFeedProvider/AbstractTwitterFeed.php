@@ -27,14 +27,13 @@ namespace RZ\MixedFeed\AbstractFeedProvider;
 
 use Abraham\TwitterOAuth\TwitterOAuth;
 use Doctrine\Common\Cache\CacheProvider;
-use RZ\MixedFeed\AbstractFeedProvider;
-use RZ\MixedFeed\Exception\CredentialsException;
 use RZ\MixedFeed\AbstractFeedProvider as BaseFeedProvider;
+use RZ\MixedFeed\Exception\CredentialsException;
 
 /**
  * Get a Twitter tweets abstract feed.
  */
-class AbstractTwitterFeed extends BaseFeedProvider
+abstract class AbstractTwitterFeed extends BaseFeedProvider
 {
     protected $accessToken;
     protected $cacheProvider;
@@ -44,12 +43,12 @@ class AbstractTwitterFeed extends BaseFeedProvider
 
     /**
      *
-     * @param array              $queryParams
-     * @param string             $consumerKey
-     * @param string             $consumerSecret
-     * @param string             $accessToken
-     * @param string             $accessTokenSecret
+     * @param string $consumerKey
+     * @param string $consumerSecret
+     * @param string $accessToken
+     * @param string $accessTokenSecret
      * @param CacheProvider|null $cacheProvider
+     * @throws CredentialsException
      */
     public function __construct(
         $consumerKey,

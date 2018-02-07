@@ -27,7 +27,6 @@ namespace RZ\MixedFeed;
 
 use Doctrine\Common\Cache\CacheProvider;
 use GuzzleHttp\Exception\ClientException;
-use RZ\MixedFeed\AbstractFeedProvider;
 use RZ\MixedFeed\Exception\CredentialsException;
 
 /**
@@ -45,9 +44,11 @@ class GithubCommitsFeed extends AbstractFeedProvider
 
     /**
      *
-     * @param string             $repository
-     * @param string             $accessToken
+     * @param string $repository
+     * @param string $accessToken
      * @param CacheProvider|null $cacheProvider
+     * @param int $page
+     * @throws CredentialsException
      */
     public function __construct(
         $repository,

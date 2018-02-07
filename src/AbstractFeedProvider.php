@@ -26,7 +26,6 @@
 namespace RZ\MixedFeed;
 
 use RZ\MixedFeed\Exception\FeedProviderErrorException;
-use RZ\MixedFeed\FeedProviderInterface;
 
 /**
  * Implements a basic feed provider with
@@ -35,6 +34,12 @@ use RZ\MixedFeed\FeedProviderInterface;
 abstract class AbstractFeedProvider implements FeedProviderInterface
 {
     protected $ttl = 7200;
+
+    /**
+     * @param int $count
+     * @return array
+     */
+    protected abstract function getFeed($count = 5);
 
     /**
      * {@inheritdoc}
