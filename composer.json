@@ -2,6 +2,7 @@
     "name": "rezozero/mixedfeed",
     "description": "A PHP library to get social networks feeds and merge them",
     "license": "MIT",
+    "type": "library",
     "authors": [
         {
             "name": "Ambroise Maupate",
