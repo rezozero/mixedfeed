@@ -43,6 +43,11 @@ class TwitterSearchFeed extends AbstractTwitterFeed
     protected $includeRetweets = true;
 
     /**
+     * @var bool
+     */
+    protected $extended = false;
+
+    /**
      * @var string
      */
     protected $resultType = 'mixed';
@@ -60,7 +65,7 @@ class TwitterSearchFeed extends AbstractTwitterFeed
      * @param string $accessToken
      * @param string $accessTokenSecret
      * @param CacheProvider|null $cacheProvider
-     * @throws Exception\CredentialsException
+     * @param bool $extended
      */
     public function __construct(
         array $queryParams,
@@ -68,7 +73,8 @@ class TwitterSearchFeed extends AbstractTwitterFeed
         $consumerSecret,
         $accessToken,
         $accessTokenSecret,
-        CacheProvider $cacheProvider = null
+        CacheProvider $cacheProvider = null,
+        $extended = false
     ) {
         parent::__construct(
             $consumerKey,
@@ -80,6 +86,7 @@ class TwitterSearchFeed extends AbstractTwitterFeed
 
         $this->queryParams = array_filter($queryParams);
         $this->cacheKey = $this->getFeedPlatform() . md5(serialize($queryParams));
+        $this->extended = $extended;
     }
 
     /**
@@ -118,6 +125,9 @@ class TwitterSearchFeed extends AbstractTwitterFeed
                 "count" => $count,
                 "result_type" => $this->resultType,
             ];
+            if ($this->extended) {
+                $params['tweet_mode'] = 'extended';
+            }
 
             $body = $this->twitterConnection->get("search/tweets", $params);
 

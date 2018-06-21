@@ -24,7 +24,7 @@ $feed = new MixedFeed([
     new InstagramFeed(
         'instagram_user_id',
         'instagram_access_token',
-        // you can add a doctrine cache provider
+        null // you can add a doctrine cache provider
     ),
     new TwitterFeed(
         'twitter_user_id',
@@ -32,10 +32,10 @@ $feed = new MixedFeed([
         'twitter_consumer_secret',
         'twitter_access_token',
         'twitter_access_token_secret',
-        // you can add a doctrine cache provider
-        // exclude replies true/false
-        // include retweets true/false
-        // extended mode true/false
+        null,  // you can add a doctrine cache provider
+        true,  // exclude replies true/false
+        false, // include retweets true/false
+        false  // extended mode true/false
     ),
     new TwitterSearchFeed(
         [
@@ -48,23 +48,24 @@ $feed = new MixedFeed([
         'twitter_consumer_secret',
         'twitter_access_token',
         'twitter_access_token_secret',
-        // you can add a doctrine cache provider
+        null,  // you can add a doctrine cache provider
+        false  // extended mode true/false
     ),
     new FacebookPageFeed(
         'page-id',
         'app_access_token',
-        // you can add a doctrine cache provider
-        // And a fields array to retrieve too
+        null, // you can add a doctrine cache provider
+        []    // And a fields array to retrieve too
     ),
     new GithubCommitsFeed(
         'symfony/symfony',
         'access_token',
-        // you can add a doctrine cache provider
+        null // you can add a doctrine cache provider
     ),
     new GithubReleasesFeed(
         'roadiz/roadiz',
         'access_token',
-        // you can add a doctrine cache provider
+        null // you can add a doctrine cache provider
     ),
 ]);
 
