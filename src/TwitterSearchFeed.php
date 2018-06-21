@@ -45,7 +45,7 @@ class TwitterSearchFeed extends AbstractTwitterFeed
     /**
      * @var bool
      */
-    protected $extended = true;
+    protected $extended = false;
 
     /**
      * @var string
@@ -65,7 +65,7 @@ class TwitterSearchFeed extends AbstractTwitterFeed
      * @param string $accessToken
      * @param string $accessTokenSecret
      * @param CacheProvider|null $cacheProvider
-     * @throws Exception\CredentialsException
+     * @param bool $extended
      */
     public function __construct(
         array $queryParams,
@@ -124,8 +124,10 @@ class TwitterSearchFeed extends AbstractTwitterFeed
                 "q" => $this->formatQueryParams(),
                 "count" => $count,
                 "result_type" => $this->resultType,
-                'tweet_mode' =>  ($this->extended ? 'extended' : '')
             ];
+            if ($this->extended) {
+                $params['tweet_mode'] = 'extended';
+            }
 
             $body = $this->twitterConnection->get("search/tweets", $params);
 
