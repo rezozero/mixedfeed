@@ -39,7 +39,7 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
      * @param int $count
      * @return array
      */
-    protected abstract function getFeed($count = 5);
+    abstract protected function getFeed($count = 5);
 
     /**
      * {@inheritdoc}

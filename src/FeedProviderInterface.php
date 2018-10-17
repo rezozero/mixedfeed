@@ -25,6 +25,8 @@
  */
 namespace RZ\MixedFeed;
 
+use RZ\MixedFeed\Exception\FeedProviderErrorException;
+
 interface FeedProviderInterface
 {
     /**
@@ -43,13 +45,14 @@ interface FeedProviderInterface
      *
      * @param  integer $count
      * @return array
+     * @throws FeedProviderErrorException
      */
     public function getItems($count = 5);
 
     /**
      * Get a \DateTime object from a social feed item.
      *
-     * @param  stdClass $item
+     * @param \stdClass $item
      * @return \DateTime
      */
     public function getDateTime($item);

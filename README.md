@@ -74,7 +74,11 @@ return $feed->getItems(12);
 
 ## Combine feeds
 
-*mixedfeed* can combine multiple social feeds so you can loop over them and use some common data fields such as `feedItemPlatform`, `normalizedDate` and `canonicalMessage`.
+*mixedfeed* can combine multiple social feeds so you can loop over them and use some common data fields such as `feedItemPlatform`, `normalizedDate` and `canonicalMessage`. *mixedfeed* will sort all your feed items by *descending* `normalizedDate`, but you can configure it to sort *ascending*: 
+
+```php
+new MixedFeed([…], MixedFeed::ASC);
+```
 
 Each feed provider must inject these three parameters in feed items:
 
@@ -115,8 +119,9 @@ No problem, you can easily create your own feed provider to use in *mixedfeed*. 
 will inherit from `RZ\MixedFeed\AbstractFeedProvider`. Then you will have to implement each method from `FeedProviderInterface`:
 
 * `getDateTime` method to look for the critical datetime field in your feed.
-* `getFeed` method to consume your API endpoint with a count limit and take care of caching your responses.
-* `getCanonicalMessage` method to look for the important text content in your feed.
+* `getFeed` method to consume your API endpoint with a count limit and take care of caching your responses. 
+This method **must convert your own feed items into `\stdClass` objects.**
+* `getCanonicalMessage` method to look for the important text content in your feed items.
 * `getFeedPlatform` method to get a global text identifier for your feed items.
 * `isValid` method to check if API call has succeeded regarding feed content.
 * `getErrors` method to errors from API feed that did not succeed.
@@ -125,3 +130,62 @@ will inherit from `RZ\MixedFeed\AbstractFeedProvider`. Then you will have to imp
 Feel free to check our existing Feed providers to see how they work. And we strongly advise you to
 implement a caching system not to call your API endpoints at each request. By default, we use *Doctrine*’s caching
 system which has many storage options.
+
+### Create a feed provider from a *Doctrine* repository
+
+If you need to merge social network feeds with your own website articles, you can create a custom FeedProvider which wraps your Doctrine objects into `\stdClass` items. You’ll need to implement your `getFeed` method using an EntityManager:
+
+```php
+protected $entityManager;
+
+public function __construct(\Doctrine\ORM\EntityManagerInterface $entityManager)
+{
+    $this->entityManager = $entityManager;
+    $this->tags = $tags;
+    $this->timespan = $timespan;
+}
+
+protected function getFeed($count = 5)
+{
+    return array_map(
+        function (Article $article) {
+            $object = new \stdClass();
+            $object->native = $article;
+            return $object;
+        }, 
+        $this->entityManager->getRepository(Article::class)->findBy(
+            [],
+            ['datetime' => 'DESC'],
+            $count
+        )
+    );
+}
+```
+
+Then you can define your *date-time* and *canonical message* methods to look into this object:
+
+```php
+/**
+ * @inheritDoc
+ */
+public function getDateTime($item)
+{
+    if ($item->native instanceof Article) {
+        return $item->native->getDatetime();
+    }
+
+    return null;
+}
+
+/**
+ * @inheritDoc
+ */
+public function getCanonicalMessage($item)
+{
+    if ($item->native instanceof Article) {
+        return $item->native->getExcerpt();
+    }
+
+    return null;
+}
+```
