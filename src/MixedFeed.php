@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2015, Ambroise Maupate
+ * Copyright © 2018, Ambroise Maupate
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,19 +29,30 @@ use RZ\MixedFeed\Exception\FeedProviderErrorException;
 use RZ\MixedFeed\MockObject\ErroredFeedItem;
 
 /**
- * Combine feed providers and sort them ante-chronological.
+ * Combine feed providers and sort them by date and time, descending or ascending.
  */
 class MixedFeed extends AbstractFeedProvider
 {
+    const ASC = 'ASC';
+    const DESC = 'DESC';
+
+    /**
+     * @var FeedProviderInterface[]
+     */
     protected $providers;
 
     /**
-     * Create a mixed feed composed of heterogeneous feed
-     * providers.
-     *
-     * @param array $providers
+     * @var string
      */
-    public function __construct(array $providers = [])
+    protected $sortDirection;
+
+    /**
+     * Create a mixed feed composed of heterogeneous feed providers.
+     *
+     * @param FeedProviderInterface[] $providers
+     * @param string $sortDirection
+     */
+    public function __construct(array $providers = [], $sortDirection = MixedFeed::DESC)
     {
         foreach ($providers as $provider) {
             if (!($provider instanceof FeedProviderInterface)) {
@@ -50,6 +61,7 @@ class MixedFeed extends AbstractFeedProvider
         }
 
         $this->providers = $providers;
+        $this->sortDirection = $sortDirection;
     }
 
     /**
@@ -78,6 +90,10 @@ class MixedFeed extends AbstractFeedProvider
 
                 if ($aDT == $bDT) {
                     return 0;
+                }
+                // ASC sorting
+                if ($this->sortDirection === static::ASC) {
+                    return ($aDT > $bDT) ? 1 : -1;
                 }
                 // DESC sorting
                 return ($aDT > $bDT) ? -1 : 1;

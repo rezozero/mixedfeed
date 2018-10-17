@@ -7,7 +7,7 @@
         {
             "name": "Ambroise Maupate",
             "email": "ambroise@rezo-zero.com",
-            "homepage": "http://www.rezo-zero.com",
+            "homepage": "https://www.rezo-zero.com",
             "role": "Lead developer"
         }
     ],
@@ -25,5 +25,8 @@
     },
     "autoload": {
         "psr-4": {"RZ\\MixedFeed\\": "src/"}
+    },
+    "require-dev": {
+        "squizlabs/php_codesniffer": "^3.3"
     }
 }
