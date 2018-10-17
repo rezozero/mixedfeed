@@ -141,8 +141,6 @@ protected $entityManager;
 public function __construct(\Doctrine\ORM\EntityManagerInterface $entityManager)
 {
     $this->entityManager = $entityManager;
-    $this->tags = $tags;
-    $this->timespan = $timespan;
 }
 
 protected function getFeed($count = 5)
