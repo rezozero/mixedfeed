@@ -99,6 +99,7 @@ For example, if you are using *Twig*, you will be able to include a sub-template
 
 |  Feed provider class  |  Description | `feedItemPlatform` |
 | -------------- | ---------------- | ------------------ |
+| InstagramOEmbedFeed | Call over `https://api.instagram.com/oembed/` endpoint. It only needs a `$embedUrls` array | `instagram_oembed` |
 | InstagramFeed | Call over `/v1/users/$userId/media/recent/` endpoint. It needs a `$userId` and an `$accessToken` | `instagram` |
 | TwitterFeed | Call over `statuses/user_timeline` endpoint. It requires a `$userId`, a `$consumerKey`, a `$consumerSecret`, an `$accessToken` and an `$accessTokenSecret`. Be careful, this [endpoint](https://dev.twitter.com/rest/reference/get/statuses/user_timeline) can **only return up to 3,200 of a user’s most recent Tweets**, your item count could be lesser than expected. In the same way, Twitter removes retweets after retrieving the items count. | `twitter` |
 | TwitterSearchFeed | Call over `search/tweets` endpoint. It requires a `$queryParams` array, a `$consumerKey`, a `$consumerSecret`, an `$accessToken` and an `$accessTokenSecret`. Be careful, Twitter API **won’t retrieve tweets older than 7 days**, your item count could be lesser than expected. `$queryParams` must be a *key-valued* array with *query operators* according to [Twitter API documentation](https://dev.twitter.com/rest/public/search). | `twitter` |
