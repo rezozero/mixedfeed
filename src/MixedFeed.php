@@ -25,6 +25,7 @@
  */
 namespace RZ\MixedFeed;
 
+use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Exception\FeedProviderErrorException;
 use RZ\MixedFeed\MockObject\ErroredFeedItem;
 
@@ -87,6 +88,45 @@ class MixedFeed extends AbstractFeedProvider
             usort($list, function (\stdClass $a, \stdClass $b) {
                 $aDT = $a->normalizedDate;
                 $bDT = $b->normalizedDate;
+
+                if ($aDT == $bDT) {
+                    return 0;
+                }
+                // ASC sorting
+                if ($this->sortDirection === static::ASC) {
+                    return ($aDT > $bDT) ? 1 : -1;
+                }
+                // DESC sorting
+                return ($aDT > $bDT) ? -1 : 1;
+            });
+        }
+
+        return $list;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getCanonicalItems($count = 5)
+    {
+        $list = [];
+        if (count($this->providers) > 0) {
+            $perProviderCount = floor($count / count($this->providers));
+
+            /** @var FeedProviderInterface $provider */
+            foreach ($this->providers as $provider) {
+                try {
+                    $list = array_merge($list, $provider->getCanonicalItems($perProviderCount));
+                } catch (FeedProviderErrorException $e) {
+                    $list = array_merge($list, [
+                        new ErroredFeedItem($e->getMessage(), $provider->getFeedPlatform()),
+                    ]);
+                }
+            }
+
+            usort($list, function (FeedItem $a, FeedItem $b) {
+                $aDT = $a->getDateTime();
+                $bDT = $b->getDateTime();
 
                 if ($aDT == $bDT) {
                     return 0;

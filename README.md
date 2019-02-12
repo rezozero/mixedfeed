@@ -70,6 +70,8 @@ $feed = new MixedFeed([
 ]);
 
 return $feed->getItems(12);
+// Or use canonical FeedItem objects
+// return $feed->getCanonicalItems(12);
 ```
 
 ## Combine feeds
@@ -95,10 +97,23 @@ For example, if you are using *Twig*, you will be able to include a sub-template
 * `normalizedDate`: This is a crucial parameter as it allows *mixedfeed* library to sort *antechronologically* multiple feeds with heterogeneous structures.
 * `canonicalMessage`: This is a useful field which contains the **text content** for each item over **all** platforms. You can use this to display items texts within a simple loop.
 
+## Use *FeedItem* instead of raw feed
+
+If you need to serialize your MixedFeed to JSON or XML again, you should not want all the raw data contained in each
+social feed item. So you can use the `$feed->getCanonicalItems(12);` method instead of `getItems` to get a more concise
+object with essential data: `RZ\MixedFeed\Canonical\FeedItem`.
+
+When FeedItem has images, `FeedItem::$images` will hold an array of `RZ\MixedFeed\Canonical\Image` objects to
+have better access to its `url`, `width` and `height` if they're available.
+
+Each feed provider must implement how to *hydrate* a `FeedItem` from the raw feed overriding `createFeedItemFromObject()`
+method.
+
 ## Feed providers
 
 |  Feed provider class  |  Description | `feedItemPlatform` |
 | -------------- | ---------------- | ------------------ |
+| Medium | Call over `https://medium.com/@username/latest` endpoint. It only needs a `$username`  | `medium` |
 | InstagramOEmbedFeed | Call over `https://api.instagram.com/oembed/` endpoint. It only needs a `$embedUrls` array | `instagram_oembed` |
 | InstagramFeed | Call over `/v1/users/$userId/media/recent/` endpoint. It needs a `$userId` and an `$accessToken` | `instagram` |
 | TwitterFeed | Call over `statuses/user_timeline` endpoint. It requires a `$userId`, a `$consumerKey`, a `$consumerSecret`, an `$accessToken` and an `$accessTokenSecret`. Be careful, this [endpoint](https://dev.twitter.com/rest/reference/get/statuses/user_timeline) can **only return up to 3,200 of a user’s most recent Tweets**, your item count could be lesser than expected. In the same way, Twitter removes retweets after retrieving the items count. | `twitter` |
@@ -158,6 +173,22 @@ protected function getFeed($count = 5)
             $count
         )
     );
+}
+
+protected function createFeedItemFromObject($item)
+{
+    $feedItem = new RZ\MixedFeed\Canonical\FeedItem();
+    $feedItem->setDateTime($this->getDateTime($item));
+    $feedItem->setMessage($this->getCanonicalMessage($item));
+    $feedItem->setPlatform($this->getFeedPlatform());
+    
+    for ($item->images as $image) {
+        $feedItemImage = new RZ\MixedFeed\Canonical\Image();
+        $feedItemImage->setUrl($image->url);
+        $feedItem->addImage($feedItemImage);
+    }
+   
+    return $feedItem;
 }
 ```
 
