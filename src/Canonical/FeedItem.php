@@ -13,6 +13,10 @@ class FeedItem
     /**
      * @var string
      */
+    protected $id;
+    /**
+     * @var string
+     */
     protected $platform;
     /**
      * @var string
@@ -38,6 +42,26 @@ class FeedItem
      * @var \DateTime
      */
     protected $dateTime;
+
+    /**
+     * @return string
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * @param string $id
+     *
+     * @return FeedItem
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+
+        return $this;
+    }
 
     /**
      * @return string

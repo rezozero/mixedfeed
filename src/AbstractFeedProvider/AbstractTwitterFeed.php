@@ -28,6 +28,7 @@ namespace RZ\MixedFeed\AbstractFeedProvider;
 use Abraham\TwitterOAuth\TwitterOAuth;
 use Doctrine\Common\Cache\CacheProvider;
 use RZ\MixedFeed\AbstractFeedProvider as BaseFeedProvider;
+use RZ\MixedFeed\Canonical\Image;
 use RZ\MixedFeed\Exception\CredentialsException;
 
 /**
@@ -142,5 +143,30 @@ abstract class AbstractTwitterFeed extends BaseFeedProvider
         }
 
         return $errors;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function createFeedItemFromObject($item)
+    {
+        $feedItem = parent::createFeedItemFromObject($item);
+        $feedItem->setId($item->id_str);
+        $feedItem->setAuthor($item->user->name);
+        if (isset($item->entities->urls[0])) {
+            $feedItem->setLink($item->entities->urls[0]->expanded_url);
+        }
+
+        if (isset($item->entities->media)) {
+            foreach ($item->entities->media as $media) {
+                $feedItemImage = new Image();
+                $feedItemImage->setUrl($media->media_url_https);
+                $feedItemImage->setWidth($media->sizes->large->w);
+                $feedItemImage->setHeight($media->sizes->large->h);
+                $feedItem->addImage($feedItemImage);
+            }
+        }
+
+        return $feedItem;
     }
 }

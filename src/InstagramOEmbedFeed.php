@@ -4,6 +4,7 @@ namespace RZ\MixedFeed;
 
 use Doctrine\Common\Cache\CacheProvider;
 use GuzzleHttp\Exception\ClientException;
+use RZ\MixedFeed\Canonical\Image;
 
 class InstagramOEmbedFeed extends AbstractFeedProvider
 {
@@ -113,5 +114,22 @@ class InstagramOEmbedFeed extends AbstractFeedProvider
     public function getErrors($feed)
     {
         return $feed['error'];
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function createFeedItemFromObject($item)
+    {
+        $feedItem = parent::createFeedItemFromObject($item);
+        $feedItem->setId($item->media_id);
+        $feedItem->setAuthor($item->author_name);
+        $feedItem->setLink($item->author_url);
+        $feedItemImage = new Image();
+        $feedItemImage->setUrl($item->thumbnail_url);
+        $feedItemImage->setWidth($item->thumbnail_width);
+        $feedItemImage->setHeight($item->thumbnail_height);
+        $feedItem->addImage($feedItemImage);
+        return $feedItem;
     }
 }

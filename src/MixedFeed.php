@@ -118,8 +118,12 @@ class MixedFeed extends AbstractFeedProvider
                 try {
                     $list = array_merge($list, $provider->getCanonicalItems($perProviderCount));
                 } catch (FeedProviderErrorException $e) {
+                    $errorItem = new FeedItem();
+                    $errorItem->setMessage($e->getMessage());
+                    $errorItem->setPlatform($provider->getFeedPlatform() . ' [errored]');
+                    $errorItem->setDateTime(new \DateTime());
                     $list = array_merge($list, [
-                        new ErroredFeedItem($e->getMessage(), $provider->getFeedPlatform()),
+                        $errorItem
                     ]);
                 }
             }

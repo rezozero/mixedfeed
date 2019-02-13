@@ -28,6 +28,7 @@ namespace RZ\MixedFeed;
 use Doctrine\Common\Cache\CacheProvider;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
+use RZ\MixedFeed\Canonical\Image;
 use RZ\MixedFeed\Exception\CredentialsException;
 
 /**
@@ -72,7 +73,7 @@ class FacebookPageFeed extends AbstractFeedProvider
         $this->cacheProvider = $cacheProvider;
         $this->cacheKey = $this->getFeedPlatform() . $this->pageId;
 
-        $this->fields = ['link', 'picture', 'full_picture', 'message', 'story', 'type', 'created_time', 'source', 'status_type'];
+        $this->fields = ['from', 'link', 'picture', 'full_picture', 'message', 'story', 'type', 'created_time', 'source', 'status_type'];
         $this->fields = array_unique(array_merge($this->fields, $fields));
 
         if (null === $this->accessToken ||
@@ -219,5 +220,28 @@ class FacebookPageFeed extends AbstractFeedProvider
         $this->until = $until;
 
         return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function createFeedItemFromObject($item)
+    {
+        $feedItem = parent::createFeedItemFromObject($item);
+        $feedItem->setId($item->id);
+        if (isset($item->from)) {
+            $feedItem->setAuthor($item->from->name);
+        }
+        if (isset($item->link)) {
+            $feedItem->setLink($item->link);
+        }
+
+        if (isset($item->full_picture)) {
+            $feedItemImage = new Image();
+            $feedItemImage->setUrl($item->full_picture);
+            $feedItem->addImage($feedItemImage);
+        }
+
+        return $feedItem;
     }
 }
