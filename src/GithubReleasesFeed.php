@@ -140,4 +140,18 @@ class GithubReleasesFeed extends AbstractFeedProvider
 
         return $errors;
     }
+
+    /**
+     * @inheritDoc
+     */
+    protected function createFeedItemFromObject($item)
+    {
+        $feedItem = parent::createFeedItemFromObject($item);
+        $feedItem->setId($item->id);
+        $feedItem->setAuthor($item->author->login);
+        $feedItem->setLink($item->html_url);
+        $feedItem->setTitle($item->name);
+        $feedItem->setMessage($item->body);
+        return $feedItem;
+    }
 }
