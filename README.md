@@ -3,7 +3,7 @@
 > A PHP library to rule them all, to entangle them with magic, a PHP library to gather them and bind them in darkness
 
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/ed3544de-7d64-4ef9-a551-c61a66fb668d/mini.png)](https://insight.sensiolabs.com/projects/ed3544de-7d64-4ef9-a551-c61a66fb668d)
-![License](http://img.shields.io/:license-mit-blue.svg)
+![License](http://img.shields.io/:license-mit-blue.svg?style=flat) ![Packagist](https://img.shields.io/packagist/v/rezozero/mixedfeed.svg?style=flat)
 
 - [Install](#install)
 - [Combine feeds](#combine-feeds)
@@ -15,7 +15,7 @@
 
 ## Install
 
-MixedFeed v2+ needs at least PHP 7.1, check your server configuration.
+*mixedfeed* v2+ needs at least PHP 7.1, check your server configuration.
 
 ```shell
 composer require rezozero/mixedfeed
@@ -80,8 +80,10 @@ $feed = new MixedFeed([
 ]);
 
 return $feed->getItems(12);
-// Or use canonical FeedItem objects
-// return $feed->getCanonicalItems(12);
+// Or use canonical \RZ\MixedFeed\Canonical\FeedItem objects
+// for a better compatibility and easier templating with multiple
+// social platforms.
+return $feed->getCanonicalItems(12);
 ```
 
 ## Combine feeds
