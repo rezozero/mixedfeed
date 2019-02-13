@@ -162,4 +162,16 @@ class GithubCommitsFeed extends AbstractFeedProvider
 
         return $errors;
     }
+
+    /**
+     * @inheritDoc
+     */
+    protected function createFeedItemFromObject($item)
+    {
+        $feedItem = parent::createFeedItemFromObject($item);
+        $feedItem->setId($item->sha);
+        $feedItem->setAuthor($item->commit->author->name);
+        $feedItem->setLink($item->html_url);
+        return $feedItem;
+    }
 }

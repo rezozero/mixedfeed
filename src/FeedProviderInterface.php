@@ -50,6 +50,15 @@ interface FeedProviderInterface
     public function getItems($count = 5);
 
     /**
+     * Get item method must return a normalized array of FeedItem.
+     *
+     * @param int $count
+     *
+     * @return mixed
+     */
+    public function getCanonicalItems($count = 5);
+
+    /**
      * Get a \DateTime object from a social feed item.
      *
      * @param \stdClass $item
@@ -61,12 +70,16 @@ interface FeedProviderInterface
      * Check if the feed provider has succeded to
      * contact API.
      *
+     * @param $feed
+     *
      * @return boolean
      */
     public function isValid($feed);
 
     /**
      * Get errors details.
+     *
+     * @param $feed
      *
      * @return string
      */
@@ -75,7 +88,7 @@ interface FeedProviderInterface
     /**
      * Get a canonical message from current feed item.
      *
-     * @param  stdClass $item
+     * @param \stdClass $item
      * @return string
      */
     public function getCanonicalMessage($item);

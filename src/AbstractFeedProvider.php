@@ -25,6 +25,7 @@
  */
 namespace RZ\MixedFeed;
 
+use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Exception\FeedProviderErrorException;
 
 /**
@@ -63,9 +64,27 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
                 }
             }
             return $list;
-        } else {
-            throw new FeedProviderErrorException($this->getFeedPlatform(), $this->getErrors($list));
         }
+        throw new FeedProviderErrorException($this->getFeedPlatform(), $this->getErrors($list));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getCanonicalItems($count = 5)
+    {
+        $list = $this->getFeed($count);
+
+        if ($this->isValid($list)) {
+            $items = [];
+            foreach ($list as $index => $item) {
+                if (is_object($item)) {
+                    $items[] = $this->createFeedItemFromObject($item);
+                }
+            }
+            return $items;
+        }
+        throw new FeedProviderErrorException($this->getFeedPlatform(), $this->getErrors($list));
     }
 
     /**
@@ -90,5 +109,19 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
         $this->ttl = $ttl;
 
         return $this;
+    }
+
+    /**
+     * @param \stdClass $item
+     *
+     * @return FeedItem
+     */
+    protected function createFeedItemFromObject($item)
+    {
+        $feedItem = new FeedItem();
+        $feedItem->setDateTime($this->getDateTime($item));
+        $feedItem->setMessage($this->getCanonicalMessage($item));
+        $feedItem->setPlatform($this->getFeedPlatform());
+        return $feedItem;
     }
 }
