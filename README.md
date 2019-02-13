@@ -5,7 +5,17 @@
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/ed3544de-7d64-4ef9-a551-c61a66fb668d/mini.png)](https://insight.sensiolabs.com/projects/ed3544de-7d64-4ef9-a551-c61a66fb668d)
 ![License](http://img.shields.io/:license-mit-blue.svg)
 
+- [Install](#install)
+- [Combine feeds](#combine-feeds)
+- [Use *FeedItem* instead of raw feed](#use--feeditem--instead-of-raw-feed)
+- [Feed providers](#feed-providers)
+- [Modify cache TTL](#modify-cache-ttl)
+- [Create your own feed provider](#create-your-own-feed-provider)
+  * [Create a feed provider from a *Doctrine* repository](#create-a-feed-provider-from-a--doctrine--repository)
+
 ## Install
+
+MixedFeed v2+ needs at least PHP 7.1, check your server configuration.
 
 ```shell
 composer require rezozero/mixedfeed
@@ -134,6 +144,7 @@ There are plenty of APIs on the internet, and this tool won’t be able to handl
 No problem, you can easily create your own feed provider to use in *mixedfeed*. You just have to create a new *class* that
 will inherit from `RZ\MixedFeed\AbstractFeedProvider`. Then you will have to implement each method from `FeedProviderInterface`:
 
+* `createFeedItemFromObject($item)` method which transform a raw feed object into a canonical `RZ\MixedFeed\Canonical\FeedItem` and `RZ\MixedFeed\Canonical\Image`
 * `getDateTime` method to look for the critical datetime field in your feed.
 * `getFeed` method to consume your API endpoint with a count limit and take care of caching your responses. 
 This method **must convert your own feed items into `\stdClass` objects.**
