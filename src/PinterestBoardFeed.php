@@ -28,6 +28,7 @@ namespace RZ\MixedFeed;
 use Doctrine\Common\Cache\CacheProvider;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
+use RZ\MixedFeed\Canonical\Image;
 use RZ\MixedFeed\Exception\CredentialsException;
 
 /**
@@ -127,7 +128,7 @@ class PinterestBoardFeed extends AbstractFeedProvider
      */
     public function getFeedPlatform()
     {
-        return 'pinterest_board';
+        return 'pinterest_pin';
     }
 
     /**
@@ -144,5 +145,25 @@ class PinterestBoardFeed extends AbstractFeedProvider
     public function getErrors($feed)
     {
         return $feed['error'];
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function createFeedItemFromObject($item)
+    {
+        $feedItem = parent::createFeedItemFromObject($item);
+        $feedItem->setId($item->id);
+        $feedItem->setAuthor($item->creator->first_name . ' ' . $item->creator->last_name);
+        $feedItem->setLink($item->url);
+
+        if (isset($item->image)) {
+            $feedItemImage = new Image();
+            $feedItemImage->setUrl($item->image->original->url);
+            $feedItemImage->setWidth($item->image->original->width);
+            $feedItemImage->setHeight($item->image->original->height);
+            $feedItem->addImage($feedItemImage);
+        }
+        return $feedItem;
     }
 }
