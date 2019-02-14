@@ -43,16 +43,23 @@ class InstagramOEmbedFeed extends AbstractFeedProvider
                 return $this->cacheProvider->fetch($countKey);
             }
             $body = [];
-
+            $promises = [];
+            $client = new \GuzzleHttp\Client();
             foreach ($this->embedUrls as $embedUrl) {
-                $client = new \GuzzleHttp\Client();
-                $response = $client->get('https://api.instagram.com/oembed', [
+                // Initiate each request but do not block
+                $promises[] = $client->getAsync('https://api.instagram.com/oembed', [
                     'query' => [
                         'url' => $embedUrl,
                     ],
                 ]);
-                array_push($body, json_decode($response->getBody()));
             }
+            $responses = \GuzzleHttp\Promise\settle($promises)->wait();
+
+            /** @var array $response */
+            foreach ($responses as $response) {
+                array_push($body, json_decode($response['value']->getBody()->getContents()));
+            }
+
             if (null !== $this->cacheProvider) {
                 $this->cacheProvider->save(
                     $countKey,
