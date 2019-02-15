@@ -86,11 +86,6 @@ class PinterestBoardFeed extends AbstractFeedProvider
         );
     }
 
-    protected function getFeed($count = 5): array
-    {
-        return $this->getRawFeed($count)->data;
-    }
-
     /**
      * {@inheritdoc}
      */

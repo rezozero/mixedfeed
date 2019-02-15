@@ -47,7 +47,6 @@ class TwitterFeed extends AbstractTwitterFeed
     protected $extended;
 
     /**
-     *
      * @param string $userId
      * @param string $consumerKey
      * @param string $consumerSecret

@@ -99,4 +99,9 @@ interface FeedProviderInterface
      * @return string
      */
     public function getCanonicalMessage($item);
+
+    /**
+     * @return bool
+     */
+    public function supportsRequestPool(): bool;
 }

@@ -52,7 +52,6 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
         $this->cacheProvider = $cacheProvider;
     }
 
-
     /**
      * @param int $count
      * @return array
@@ -63,6 +62,16 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
     }
 
     abstract protected function getCacheKey(): string;
+
+    /**
+     * @param int $count
+     *
+     * @return bool
+     */
+    public function isCacheHit($count = 5): bool
+    {
+        return $this->cacheProvider->contains($this->getCacheKey() . $count);
+    }
 
     /**
      * @param int $count
@@ -178,5 +187,13 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
         $feedItem->setMessage($this->getCanonicalMessage($item));
         $feedItem->setPlatform($this->getFeedPlatform());
         return $feedItem;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function supportsRequestPool(): bool
+    {
+        return true;
     }
 }
