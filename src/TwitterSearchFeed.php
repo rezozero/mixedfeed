@@ -34,7 +34,6 @@ use RZ\MixedFeed\AbstractFeedProvider\AbstractTwitterFeed;
  */
 class TwitterSearchFeed extends AbstractTwitterFeed
 {
-    protected $cacheKey;
     protected $queryParams;
 
     /**
@@ -85,8 +84,12 @@ class TwitterSearchFeed extends AbstractTwitterFeed
         );
 
         $this->queryParams = array_filter($queryParams);
-        $this->cacheKey = $this->getFeedPlatform() . md5(serialize($queryParams));
         $this->extended = $extended;
+    }
+
+    protected function getCacheKey(): string
+    {
+        return $this->getFeedPlatform() . md5(serialize($this->queryParams));
     }
 
     /**
@@ -106,9 +109,9 @@ class TwitterSearchFeed extends AbstractTwitterFeed
         return implode(' ', $inlineParams);
     }
 
-    protected function getFeed($count = 5)
+    protected function getFeed($count = 5): array
     {
-        $countKey = $this->cacheKey . $count;
+        $countKey = $this->getCacheKey() . $count;
 
         try {
             if (null !== $this->cacheProvider &&

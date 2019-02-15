@@ -28,6 +28,7 @@ namespace RZ\MixedFeed\AbstractFeedProvider;
 use Abraham\TwitterOAuth\TwitterOAuth;
 use Doctrine\Common\Cache\CacheProvider;
 use RZ\MixedFeed\AbstractFeedProvider as BaseFeedProvider;
+use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Canonical\Image;
 use RZ\MixedFeed\Exception\CredentialsException;
 
@@ -37,7 +38,6 @@ use RZ\MixedFeed\Exception\CredentialsException;
 abstract class AbstractTwitterFeed extends BaseFeedProvider
 {
     protected $accessToken;
-    protected $cacheProvider;
     protected $twitterConnection;
 
     protected static $timeKey = 'created_at';
@@ -58,8 +58,8 @@ abstract class AbstractTwitterFeed extends BaseFeedProvider
         $accessTokenSecret,
         CacheProvider $cacheProvider = null
     ) {
+        parent::__construct($cacheProvider);
         $this->accessToken = $accessToken;
-        $this->cacheProvider = $cacheProvider;
 
         if (null === $accessToken ||
             false === $accessToken ||
@@ -113,6 +113,16 @@ abstract class AbstractTwitterFeed extends BaseFeedProvider
     }
 
     /**
+     * @param int $count
+     *
+     * @return \Generator
+     */
+    public function getRequests($count = 5): \Generator
+    {
+        throw new \RuntimeException('Twitter cannot be used in async mode');
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function getFeedPlatform()
@@ -148,7 +158,7 @@ abstract class AbstractTwitterFeed extends BaseFeedProvider
     /**
      * @inheritDoc
      */
-    protected function createFeedItemFromObject($item)
+    protected function createFeedItemFromObject($item): FeedItem
     {
         $feedItem = parent::createFeedItemFromObject($item);
         $feedItem->setId($item->id_str);

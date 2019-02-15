@@ -30,6 +30,13 @@ use RZ\MixedFeed\Exception\FeedProviderErrorException;
 interface FeedProviderInterface
 {
     /**
+     * @param int $count
+     *
+     * @return \Generator
+     */
+    public function getRequests($count = 5): \Generator;
+
+    /**
      * Get the social platform name.
      *
      * @return string

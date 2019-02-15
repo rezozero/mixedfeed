@@ -26,8 +26,8 @@
 namespace RZ\MixedFeed;
 
 use Doctrine\Common\Cache\CacheProvider;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Psr7\Request;
+use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Canonical\Image;
 use RZ\MixedFeed\Exception\CredentialsException;
 
@@ -40,9 +40,6 @@ class PinterestBoardFeed extends AbstractFeedProvider
 {
     protected $boardId;
     protected $accessToken;
-    protected $cacheProvider;
-    protected $cacheKey;
-
     protected static $timeKey = 'created_at';
 
     /**
@@ -57,10 +54,9 @@ class PinterestBoardFeed extends AbstractFeedProvider
         $accessToken,
         CacheProvider $cacheProvider = null
     ) {
+        parent::__construct($cacheProvider);
         $this->boardId = $boardId;
         $this->accessToken = $accessToken;
-        $this->cacheProvider = $cacheProvider;
-        $this->cacheKey = $this->getFeedPlatform() . $this->boardId;
 
         if (null === $this->accessToken ||
             false === $this->accessToken ||
@@ -69,40 +65,30 @@ class PinterestBoardFeed extends AbstractFeedProvider
         }
     }
 
-    protected function getFeed($count = 5)
+    protected function getCacheKey(): string
     {
-        try {
-            $countKey = $this->cacheKey . $count;
+        return $this->getFeedPlatform() . $this->boardId;
+    }
 
-            if (null !== $this->cacheProvider &&
-                $this->cacheProvider->contains($countKey)) {
-                return $this->cacheProvider->fetch($countKey);
-            }
+    /**
+     * @inheritDoc
+     */
+    public function getRequests($count = 5): \Generator
+    {
+        $value = http_build_query([
+            'access_token' => $this->accessToken,
+            'limit' => $count,
+            'fields' => 'id,color,created_at,creator,media,image[original],note,link,url',
+        ], null, '&', PHP_QUERY_RFC3986);
+        yield new Request(
+            'GET',
+            'https://api.pinterest.com/v1/boards/' . $this->boardId . '/pins?'.$value
+        );
+    }
 
-            $client = new Client();
-            $response = $client->get('https://api.pinterest.com/v1/boards/' . $this->boardId . '/pins/', [
-                'query' => [
-                    'access_token' => $this->accessToken,
-                    'limit' => $count,
-                    'fields' => 'id,color,created_at,creator,media,image[original],note,link,url',
-                ],
-            ]);
-            $body = json_decode($response->getBody());
-
-            if (null !== $this->cacheProvider) {
-                $this->cacheProvider->save(
-                    $countKey,
-                    $body->data,
-                    $this->ttl
-                );
-            }
-
-            return $body->data;
-        } catch (ClientException $e) {
-            return [
-                'error' => $e->getMessage(),
-            ];
-        }
+    protected function getFeed($count = 5): array
+    {
+        return $this->getRawFeed($count)->data;
     }
 
     /**
@@ -150,7 +136,7 @@ class PinterestBoardFeed extends AbstractFeedProvider
     /**
      * @inheritDoc
      */
-    protected function createFeedItemFromObject($item)
+    protected function createFeedItemFromObject($item): FeedItem
     {
         $feedItem = parent::createFeedItemFromObject($item);
         $feedItem->setId($item->id);

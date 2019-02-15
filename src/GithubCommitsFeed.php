@@ -26,7 +26,8 @@
 namespace RZ\MixedFeed;
 
 use Doctrine\Common\Cache\CacheProvider;
-use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Psr7\Request;
+use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Exception\CredentialsException;
 
 /**
@@ -36,8 +37,6 @@ class GithubCommitsFeed extends AbstractFeedProvider
 {
     protected $repository;
     protected $accessToken;
-    protected $cacheProvider;
-    protected $cacheKey;
     protected $page;
 
     protected static $timeKey = 'date';
@@ -56,11 +55,10 @@ class GithubCommitsFeed extends AbstractFeedProvider
         CacheProvider $cacheProvider = null,
         $page = 1
     ) {
+        parent::__construct($cacheProvider);
         $this->repository = $repository;
         $this->accessToken = $accessToken;
-        $this->cacheProvider = $cacheProvider;
         $this->page = $page;
-        $this->cacheKey = $this->getFeedPlatform() . $this->repository . $this->page;
 
         if (null === $repository ||
             false === $repository ||
@@ -79,40 +77,26 @@ class GithubCommitsFeed extends AbstractFeedProvider
         }
     }
 
-    protected function getFeed($count = 5)
+    protected function getCacheKey(): string
     {
-        $countKey = $this->cacheKey . $count;
+        return $this->getFeedPlatform() . $this->repository . $this->page;
+    }
 
-        try {
-            if (null !== $this->cacheProvider &&
-                $this->cacheProvider->contains($countKey)) {
-                return $this->cacheProvider->fetch($countKey);
-            }
-
-            $client = new \GuzzleHttp\Client();
-            $response = $client->get('https://api.github.com/repos/' . $this->repository . '/commits', [
-                'query' => [
-                    'access_token' => $this->accessToken,
-                    'per_page' => $count,
-                    'token_type' => 'bearer',
-                    'page' => $this->page,
-                ],
-            ]);
-            $body = json_decode($response->getBody());
-
-            if (null !== $this->cacheProvider) {
-                $this->cacheProvider->save(
-                    $countKey,
-                    $body,
-                    $this->ttl
-                );
-            }
-            return $body;
-        } catch (ClientException $e) {
-            return [
-                'error' => $e->getMessage(),
-            ];
-        }
+    /**
+     * @inheritDoc
+     */
+    public function getRequests($count = 5): \Generator
+    {
+        $value = http_build_query([
+            'access_token' => $this->accessToken,
+            'per_page' => $count,
+            'token_type' => 'bearer',
+            'page' => $this->page,
+        ], null, '&', PHP_QUERY_RFC3986);
+        yield new Request(
+            'GET',
+            'https://api.github.com/repos/' . $this->repository . '/commits?'.$value
+        );
     }
 
     /**
@@ -166,7 +150,7 @@ class GithubCommitsFeed extends AbstractFeedProvider
     /**
      * @inheritDoc
      */
-    protected function createFeedItemFromObject($item)
+    protected function createFeedItemFromObject($item): FeedItem
     {
         $feedItem = parent::createFeedItemFromObject($item);
         $feedItem->setId($item->sha);

@@ -36,8 +36,6 @@ class TwitterFeed extends AbstractTwitterFeed
 {
     protected $userId;
     protected $accessToken;
-    protected $cacheProvider;
-    protected $cacheKey;
     protected $twitterConnection;
     protected $excludeReplies;
     protected $includeRts;
@@ -85,12 +83,16 @@ class TwitterFeed extends AbstractTwitterFeed
         $this->excludeReplies = $excludeReplies;
         $this->includeRts = $includeRts;
         $this->extended = $extended;
-        $this->cacheKey = $this->getFeedPlatform() . $this->userId;
     }
 
-    protected function getFeed($count = 5)
+    protected function getCacheKey(): string
     {
-        $countKey = $this->cacheKey . $count;
+        return $this->getFeedPlatform() . $this->userId;
+    }
+
+    protected function getFeed($count = 5): array
+    {
+        $countKey = $this->getCacheKey() . $count;
 
         try {
             if (null !== $this->cacheProvider &&

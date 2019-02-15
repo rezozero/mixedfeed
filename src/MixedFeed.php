@@ -47,6 +47,11 @@ class MixedFeed extends AbstractFeedProvider
      */
     protected $sortDirection;
 
+    protected function getCacheKey(): string
+    {
+        return '';
+    }
+
     /**
      * Create a mixed feed composed of heterogeneous feed providers.
      *
@@ -55,6 +60,7 @@ class MixedFeed extends AbstractFeedProvider
      */
     public function __construct(array $providers = [], $sortDirection = MixedFeed::DESC)
     {
+        parent::__construct(null);
         foreach ($providers as $provider) {
             if (!($provider instanceof FeedProviderInterface)) {
                 throw new \RuntimeException("Provider must implements FeedProviderInterface interface.", 1);
@@ -190,8 +196,28 @@ class MixedFeed extends AbstractFeedProvider
     /**
      * @inheritDoc
      */
-    protected function getFeed($count = 5)
+    protected function getFeed($count = 5): array
     {
         trigger_error('getFeed method must not be called in MixedFeed.', E_USER_ERROR);
+        return [];
+    }
+
+    /**
+     * @param int $count
+     *
+     * @return \Generator
+     */
+    public function getRequests($count = 5): \Generator
+    {
+        if (count($this->providers) === 0) {
+            throw new \RuntimeException('No provider were registered');
+        }
+
+        $perProviderCount = floor($count / count($this->providers));
+
+        /** @var FeedProviderInterface $provider */
+        foreach ($this->providers as $provider) {
+            yield iterator_to_array($provider->getRequests($perProviderCount));
+        }
     }
 }

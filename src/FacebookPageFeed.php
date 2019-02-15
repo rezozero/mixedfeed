@@ -28,6 +28,8 @@ namespace RZ\MixedFeed;
 use Doctrine\Common\Cache\CacheProvider;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Psr7\Request;
+use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Canonical\Image;
 use RZ\MixedFeed\Exception\CredentialsException;
 
@@ -40,8 +42,6 @@ class FacebookPageFeed extends AbstractFeedProvider
 {
     protected $pageId;
     protected $accessToken;
-    protected $cacheProvider;
-    protected $cacheKey;
     protected $fields;
     /**
      * @var \DateTime|null
@@ -68,11 +68,9 @@ class FacebookPageFeed extends AbstractFeedProvider
         CacheProvider $cacheProvider = null,
         $fields = []
     ) {
+        parent::__construct($cacheProvider);
         $this->pageId = $pageId;
         $this->accessToken = $accessToken;
-        $this->cacheProvider = $cacheProvider;
-        $this->cacheKey = $this->getFeedPlatform() . $this->pageId;
-
         $this->fields = ['from', 'link', 'picture', 'full_picture', 'message', 'story', 'type', 'created_time', 'source', 'status_type'];
         $this->fields = array_unique(array_merge($this->fields, $fields));
 
@@ -83,53 +81,42 @@ class FacebookPageFeed extends AbstractFeedProvider
         }
     }
 
-    protected function getFeed($count = 5)
+    protected function getCacheKey(): string
     {
-        try {
-            $countKey = $this->cacheKey . $count;
+        return $this->getFeedPlatform() . $this->pageId;
+    }
 
-            if (null !== $this->cacheProvider &&
-                $this->cacheProvider->contains($countKey)) {
-                return $this->cacheProvider->fetch($countKey);
-            }
-
-            $client = new Client();
-            $params = [
-                'query' => [
-                    'access_token' => $this->accessToken,
-                    'limit' => $count,
-                    'fields' => implode(',', $this->fields),
-                ],
-            ];
-            /*
-             * Filter by date range
-             */
-            if (null !== $this->since &&
-                $this->since instanceof \Datetime) {
-                $params['query']['since'] = $this->since->getTimestamp();
-            }
-            if (null !== $this->until &&
-                $this->until instanceof \Datetime) {
-                $params['query']['until'] = $this->until->getTimestamp();
-            }
-
-            $response = $client->get('https://graph.facebook.com/' . $this->pageId . '/posts', $params);
-            $body = json_decode($response->getBody());
-
-            if (null !== $this->cacheProvider) {
-                $this->cacheProvider->save(
-                    $countKey,
-                    $body->data,
-                    $this->ttl
-                );
-            }
-
-            return $body->data;
-        } catch (ClientException $e) {
-            return [
-                'error' => $e->getMessage(),
-            ];
+    /**
+     * @inheritDoc
+     */
+    public function getRequests($count = 5): \Generator
+    {
+        $params = [
+            'access_token' => $this->accessToken,
+            'limit' => $count,
+            'fields' => implode(',', $this->fields),
+        ];
+        /*
+         * Filter by date range
+         */
+        if (null !== $this->since &&
+            $this->since instanceof \Datetime) {
+            $params['since'] = $this->since->getTimestamp();
         }
+        if (null !== $this->until &&
+            $this->until instanceof \Datetime) {
+            $params['until'] = $this->until->getTimestamp();
+        }
+        $value = http_build_query($params, null, '&', PHP_QUERY_RFC3986);
+        yield new Request(
+            'GET',
+            'https://graph.facebook.com/' . $this->pageId . '/posts?'.$value
+        );
+    }
+
+    protected function getFeed($count = 5): array
+    {
+        return $this->getRawFeed($count)->data;
     }
 
     /**
@@ -225,7 +212,7 @@ class FacebookPageFeed extends AbstractFeedProvider
     /**
      * @inheritDoc
      */
-    protected function createFeedItemFromObject($item)
+    protected function createFeedItemFromObject($item): FeedItem
     {
         $feedItem = parent::createFeedItemFromObject($item);
         $feedItem->setId($item->id);

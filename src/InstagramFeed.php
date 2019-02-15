@@ -26,7 +26,8 @@
 namespace RZ\MixedFeed;
 
 use Doctrine\Common\Cache\CacheProvider;
-use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Psr7\Request;
+use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Canonical\Image;
 use RZ\MixedFeed\Exception\CredentialsException;
 
@@ -37,16 +38,13 @@ class InstagramFeed extends AbstractFeedProvider
 {
     protected $userId;
     protected $accessToken;
-    protected $cacheProvider;
-    protected $cacheKey;
     protected static $timeKey = 'created_time';
 
     public function __construct($userId, $accessToken, CacheProvider $cacheProvider = null)
     {
+        parent::__construct($cacheProvider);
         $this->userId = $userId;
         $this->accessToken = $accessToken;
-        $this->cacheProvider = $cacheProvider;
-        $this->cacheKey = $this->getFeedPlatform() . $this->userId;
 
         if (null === $this->accessToken ||
             false === $this->accessToken ||
@@ -55,39 +53,29 @@ class InstagramFeed extends AbstractFeedProvider
         }
     }
 
-    protected function getFeed($count = 5)
+    protected function getCacheKey(): string
     {
-        try {
-            $countKey = $this->cacheKey . $count;
+        return $this->getFeedPlatform() . $this->userId;
+    }
 
-            if (null !== $this->cacheProvider &&
-                $this->cacheProvider->contains($countKey)) {
-                return $this->cacheProvider->fetch($countKey);
-            }
+    /**
+     * @inheritDoc
+     */
+    public function getRequests($count = 5): \Generator
+    {
+        $value = http_build_query([
+            'access_token' => $this->accessToken,
+            'count' => $count,
+        ], null, '&', PHP_QUERY_RFC3986);
+        yield new Request(
+            'GET',
+            'https://api.instagram.com/v1/users/' . $this->userId . '/media/recent/?'.$value
+        );
+    }
 
-            $client = new \GuzzleHttp\Client();
-            $response = $client->get('https://api.instagram.com/v1/users/' . $this->userId . '/media/recent/', [
-                'query' => [
-                    'access_token' => $this->accessToken,
-                    'count' => $count,
-                ],
-            ]);
-            $body = json_decode($response->getBody());
-
-            if (null !== $this->cacheProvider) {
-                $this->cacheProvider->save(
-                    $countKey,
-                    $body->data,
-                    $this->ttl
-                );
-            }
-
-            return $body->data;
-        } catch (ClientException $e) {
-            return [
-                'error' => $e->getMessage(),
-            ];
-        }
+    protected function getFeed($count = 5): array
+    {
+        return $this->getRawFeed($count)->data;
     }
 
     /**
@@ -139,7 +127,7 @@ class InstagramFeed extends AbstractFeedProvider
     /**
      * @inheritDoc
      */
-    protected function createFeedItemFromObject($item)
+    protected function createFeedItemFromObject($item): FeedItem
     {
         $feedItem = parent::createFeedItemFromObject($item);
         $feedItem->setId($item->id);

@@ -25,6 +25,8 @@
  */
 namespace RZ\MixedFeed;
 
+use Doctrine\Common\Cache\CacheProvider;
+use GuzzleHttp\Exception\ClientException;
 use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Exception\FeedProviderErrorException;
 
@@ -35,12 +37,65 @@ use RZ\MixedFeed\Exception\FeedProviderErrorException;
 abstract class AbstractFeedProvider implements FeedProviderInterface
 {
     protected $ttl = 7200;
+    /**
+     * @var CacheProvider|null
+     */
+    protected $cacheProvider;
+
+    /**
+     * AbstractFeedProvider constructor.
+     *
+     * @param CacheProvider|null $cacheProvider
+     */
+    public function __construct(CacheProvider $cacheProvider = null)
+    {
+        $this->cacheProvider = $cacheProvider;
+    }
+
 
     /**
      * @param int $count
      * @return array
      */
-    abstract protected function getFeed($count = 5);
+    protected function getFeed($count = 5): array
+    {
+        return $this->getRawFeed($count);
+    }
+
+    abstract protected function getCacheKey(): string;
+
+    /**
+     * @param int $count
+     *
+     * @return mixed
+     */
+    protected function getRawFeed($count = 5)
+    {
+        try {
+            $countKey = $this->getCacheKey() . $count;
+            if (null !== $this->cacheProvider &&
+                $this->cacheProvider->contains($countKey)) {
+                return $this->cacheProvider->fetch($countKey);
+            }
+
+            $client = new \GuzzleHttp\Client();
+            $response = $client->send($this->getRequests($count)->current());
+            $body = json_decode($response->getBody()->getContents());
+
+            if (null !== $this->cacheProvider) {
+                $this->cacheProvider->save(
+                    $countKey,
+                    $body,
+                    $this->ttl
+                );
+            }
+            return $body;
+        } catch (ClientException $e) {
+            return [
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
 
     /**
      * {@inheritdoc}
@@ -116,7 +171,7 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
      *
      * @return FeedItem
      */
-    protected function createFeedItemFromObject($item)
+    protected function createFeedItemFromObject($item): FeedItem
     {
         $feedItem = new FeedItem();
         $feedItem->setDateTime($this->getDateTime($item));

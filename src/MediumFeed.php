@@ -4,6 +4,8 @@ namespace RZ\MixedFeed;
 
 use Doctrine\Common\Cache\CacheProvider;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Psr7\Request;
+use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Canonical\Image;
 
 class MediumFeed extends AbstractFeedProvider
@@ -12,14 +14,6 @@ class MediumFeed extends AbstractFeedProvider
      * @var string
      */
     private $username;
-    /**
-     * @var string
-     */
-    private $cacheKey;
-    /**
-     * @var CacheProvider
-     */
-    private $cacheProvider;
     /**
      * @var string
      */
@@ -33,33 +27,47 @@ class MediumFeed extends AbstractFeedProvider
      */
     public function __construct($username, CacheProvider $cacheProvider = null)
     {
+        parent::__construct($cacheProvider);
         $this->username = $username;
         if (substr($username, 0, 1) !== '@') {
             $this->username = '@'.$username;
         }
-        $this->cacheProvider = $cacheProvider;
     }
 
+    protected function getCacheKey(): string
+    {
+        return $this->getFeedPlatform() . $this->username;
+    }
 
-    protected function getFeed($count = 5)
+    /**
+     * @inheritDoc
+     */
+    public function getRequests($count = 5): \Generator
+    {
+        $value = http_build_query([
+            'format' => 'json',
+            'limit' => $count,
+            'collectionId' => null,
+            'source' => 'latest',
+        ], null, '&', PHP_QUERY_RFC3986);
+        yield new Request(
+            'GET',
+            'https://medium.com/' . $this->username . '/latest?'.$value
+        );
+    }
+
+    protected function getRawFeed($count = 5)
     {
         try {
-            $countKey = $this->cacheKey . $count;
+            $countKey = $this->getCacheKey() . $count;
             if (null !== $this->cacheProvider &&
                 $this->cacheProvider->contains($countKey)) {
-                return $this->getTypedFeed($this->cacheProvider->fetch($countKey));
+                return $this->cacheProvider->fetch($countKey);
             }
 
             $client = new \GuzzleHttp\Client();
-            $response = $client->get('https://medium.com/' . $this->username . '/latest', [
-                'query' => [
-                    'format' => 'json',
-                    'limit' => $count,
-                    'collectionId' => null,
-                    'source' => 'latest',
-                ],
-            ]);
-            $raw = $response->getBody();
+            $response = $client->send($this->getRequests($count)->current());
+            $raw = $response->getBody()->getContents();
             $raw = str_replace('])}while(1);</x>', '', $raw);
             $body = json_decode($raw);
 
@@ -71,13 +79,22 @@ class MediumFeed extends AbstractFeedProvider
                 );
             }
 
-            return $this->getTypedFeed($body);
+            return $body;
         } catch (ClientException $e) {
             return [
                 'error' => $e->getMessage(),
             ];
         }
     }
+
+    /**
+     * @inheritDoc
+     */
+    protected function getFeed($count = 5): array
+    {
+        return $this->getTypedFeed($this->getRawFeed($count));
+    }
+
 
     /**
      * @param $body
@@ -154,7 +171,7 @@ class MediumFeed extends AbstractFeedProvider
     /**
      * @inheritDoc
      */
-    protected function createFeedItemFromObject($item)
+    protected function createFeedItemFromObject($item): FeedItem
     {
         $feedItem = parent::createFeedItemFromObject($item);
         $feedItem->setId($item->uniqueSlug);
