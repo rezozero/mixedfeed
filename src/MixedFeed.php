@@ -251,7 +251,7 @@ class MixedFeed extends AbstractFeedProvider
                 $provider = $this->providers[$providerIdx];
                 if ($provider instanceof AbstractFeedProvider &&
                     $response instanceof Response &&
-                    $response->getStatusCode() === 200){
+                    $response->getStatusCode() === 200) {
                     $provider->setRawFeed($response->getBody()->getContents());
                 } else {
                     $provider->setRawFeed(['error' => $response->getReasonPhrase()], false);
@@ -261,7 +261,7 @@ class MixedFeed extends AbstractFeedProvider
                 list($providerIdx, $i) = explode('.', $index);
                 $provider = $this->providers[$providerIdx];
                 if ($provider instanceof AbstractFeedProvider &&
-                    method_exists($reason, 'getMessage')){
+                    method_exists($reason, 'getMessage')) {
                     $provider->setRawFeed(['error' => $reason->getMessage()], false);
                 }
             },
