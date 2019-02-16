@@ -40,6 +40,15 @@ class InstagramFeed extends AbstractFeedProvider
     protected $accessToken;
     protected static $timeKey = 'created_time';
 
+    /**
+     * InstagramFeed constructor.
+     *
+     * @param string $userId
+     * @param string $accessToken
+     * @param CacheProvider|null $cacheProvider
+     *
+     * @throws CredentialsException
+     */
     public function __construct($userId, $accessToken, CacheProvider $cacheProvider = null)
     {
         parent::__construct($cacheProvider);
@@ -73,7 +82,7 @@ class InstagramFeed extends AbstractFeedProvider
         );
     }
 
-    protected function getFeed($count = 5): array
+    protected function getFeed($count = 5)
     {
         return $this->getRawFeed($count)->data;
     }
@@ -106,22 +115,6 @@ class InstagramFeed extends AbstractFeedProvider
     public function getFeedPlatform()
     {
         return 'instagram';
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function isValid($feed)
-    {
-        return null !== $feed && is_array($feed) && !isset($feed['error']);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getErrors($feed)
-    {
-        return $feed['error'];
     }
 
     /**

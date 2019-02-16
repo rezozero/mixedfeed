@@ -56,7 +56,6 @@ class TwitterFeed extends AbstractTwitterFeed
      * @param boolean $excludeReplies
      * @param boolean $includeRts
      * @param bool $extended
-     * @throws Exception\CredentialsException
      */
     public function __construct(
         $userId,
@@ -89,7 +88,7 @@ class TwitterFeed extends AbstractTwitterFeed
         return $this->getFeedPlatform() . $this->userId;
     }
 
-    protected function getFeed($count = 5): array
+    protected function getFeed($count = 5)
     {
         $countKey = $this->getCacheKey() . $count;
 

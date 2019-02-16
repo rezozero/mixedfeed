@@ -113,22 +113,6 @@ class PinterestBoardFeed extends AbstractFeedProvider
     }
 
     /**
-     * {@inheritdoc}
-     */
-    public function isValid($feed)
-    {
-        return null !== $feed && is_array($feed) && !isset($feed['error']);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getErrors($feed)
-    {
-        return $feed['error'];
-    }
-
-    /**
      * @inheritDoc
      */
     protected function createFeedItemFromObject($item): FeedItem

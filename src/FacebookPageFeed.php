@@ -26,8 +26,6 @@
 namespace RZ\MixedFeed;
 
 use Doctrine\Common\Cache\CacheProvider;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Psr7\Request;
 use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Canonical\Image;
@@ -114,7 +112,7 @@ class FacebookPageFeed extends AbstractFeedProvider
         );
     }
 
-    protected function getFeed($count = 5): array
+    protected function getFeed($count = 5)
     {
         return $this->getRawFeed($count)->data;
     }
@@ -143,22 +141,6 @@ class FacebookPageFeed extends AbstractFeedProvider
     public function getFeedPlatform()
     {
         return 'facebook_page';
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function isValid($feed)
-    {
-        return null !== $feed && is_array($feed) && !isset($feed['error']);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getErrors($feed)
-    {
-        return $feed['error'];
     }
 
     /**

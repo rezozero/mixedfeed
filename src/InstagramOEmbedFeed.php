@@ -50,14 +50,48 @@ class InstagramOEmbedFeed extends AbstractFeedProvider
     }
 
     /**
+     * @param mixed $rawFeed
+     * @param bool  $json
+     *
+     * @return AbstractFeedProvider
+     */
+    public function setRawFeed($rawFeed, $json = true): AbstractFeedProvider
+    {
+        if (null === $this->rawFeed) {
+            $this->rawFeed = [];
+        }
+        if ($json === true) {
+            $rawFeed = json_decode($rawFeed);
+            if ('No error' !== $jsonError = json_last_error_msg()) {
+                throw new \RuntimeException($jsonError);
+            }
+        }
+        array_push($this->rawFeed, $rawFeed);
+        return $this;
+    }
+
+    /**
      * @param int $count
      *
      * @return array
      */
     protected function getRawFeed($count = 5)
     {
+        $countKey = $this->getCacheKey() . $count;
+
+        if (null !== $this->rawFeed) {
+            if (null !== $this->cacheProvider &&
+                !$this->cacheProvider->contains($countKey)) {
+                $this->cacheProvider->save(
+                    $countKey,
+                    $this->rawFeed,
+                    $this->ttl
+                );
+            }
+            return $this->rawFeed;
+        }
+
         try {
-            $countKey = $this->getCacheKey() . $count;
             if (null !== $this->cacheProvider &&
                 $this->cacheProvider->contains($countKey)) {
                 return $this->cacheProvider->fetch($countKey);
@@ -73,9 +107,11 @@ class InstagramOEmbedFeed extends AbstractFeedProvider
 
             /** @var array $response */
             foreach ($responses as $response) {
-                //var_dump($response);
                 if ($response['state'] !== 'rejected') {
                     array_push($body, json_decode($response['value']->getBody()->getContents()));
+                    if ('No error' !== $jsonError = json_last_error_msg()) {
+                        throw new \RuntimeException($jsonError);
+                    }
                 } else {
                     throw $response['reason'];
                 }
@@ -126,22 +162,6 @@ class InstagramOEmbedFeed extends AbstractFeedProvider
         }
 
         return "";
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function isValid($feed)
-    {
-        return null !== $feed && is_array($feed) && !isset($feed['error']);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getErrors($feed)
-    {
-        return $feed['error'];
     }
 
     /**

@@ -37,13 +37,23 @@ use RZ\MixedFeed\Exception\CredentialsException;
  */
 abstract class AbstractTwitterFeed extends BaseFeedProvider
 {
-    /*
+    /**
      * Shorter TTL for Twitter
      * 5 min
+     * @var int
      */
     protected $ttl = 60*5;
+    /**
+     * @var string
+     */
     protected $accessToken;
+    /**
+     * @var TwitterOAuth
+     */
     protected $twitterConnection;
+    /**
+     * @var string
+     */
     protected static $timeKey = 'created_at';
 
     /**

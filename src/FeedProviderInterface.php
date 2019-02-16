@@ -32,6 +32,12 @@ interface FeedProviderInterface
     /**
      * @param int $count
      *
+     * @return bool
+     */
+    public function isCacheHit($count = 5): bool;
+    /**
+     * @param int $count
+     *
      * @return \Generator
      */
     public function getRequests($count = 5): \Generator;
@@ -62,6 +68,7 @@ interface FeedProviderInterface
      * @param int $count
      *
      * @return mixed
+     * @throws FeedProviderErrorException
      */
     public function getCanonicalItems($count = 5);
 

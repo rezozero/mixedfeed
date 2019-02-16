@@ -38,6 +38,10 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
 {
     protected $ttl = 7200;
     /**
+     * @var null|array
+     */
+    protected $rawFeed = null;
+    /**
      * @var CacheProvider|null
      */
     protected $cacheProvider;
@@ -54,9 +58,9 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
 
     /**
      * @param int $count
-     * @return array
+     * @return mixed
      */
-    protected function getFeed($count = 5): array
+    protected function getFeed($count = 5)
     {
         return $this->getRawFeed($count);
     }
@@ -70,7 +74,26 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
      */
     public function isCacheHit($count = 5): bool
     {
-        return $this->cacheProvider->contains($this->getCacheKey() . $count);
+        return null !== $this->cacheProvider &&
+            $this->cacheProvider->contains($this->getCacheKey() . $count);
+    }
+
+    /**
+     * @param string|array $rawFeed
+     * @param bool         $json
+     *
+     * @return AbstractFeedProvider
+     */
+    public function setRawFeed($rawFeed, $json = true): AbstractFeedProvider
+    {
+        if ($json === true) {
+            $rawFeed = json_decode($rawFeed);
+            if ('No error' !== $jsonError = json_last_error_msg()) {
+                throw new \RuntimeException($jsonError);
+            }
+        }
+        $this->rawFeed = $rawFeed;
+        return $this;
     }
 
     /**
@@ -80,8 +103,21 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
      */
     protected function getRawFeed($count = 5)
     {
+        $countKey = $this->getCacheKey() . $count;
+
+        if (null !== $this->rawFeed) {
+            if (null !== $this->cacheProvider &&
+                !$this->cacheProvider->contains($countKey)) {
+                $this->cacheProvider->save(
+                    $countKey,
+                    $this->rawFeed,
+                    $this->ttl
+                );
+            }
+            return $this->rawFeed;
+        }
+
         try {
-            $countKey = $this->getCacheKey() . $count;
             if (null !== $this->cacheProvider &&
                 $this->cacheProvider->contains($countKey)) {
                 return $this->cacheProvider->fetch($countKey);
@@ -90,6 +126,9 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
             $client = new \GuzzleHttp\Client();
             $response = $client->send($this->getRequests($count)->current());
             $body = json_decode($response->getBody()->getContents());
+            if ('No error' !== $jsonError = json_last_error_msg()) {
+                throw new \RuntimeException($jsonError);
+            }
 
             if (null !== $this->cacheProvider) {
                 $this->cacheProvider->save(
@@ -195,5 +234,21 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
     public function supportsRequestPool(): bool
     {
         return true;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isValid($feed)
+    {
+        return null !== $feed && is_array($feed) && !isset($feed['error']);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getErrors($feed)
+    {
+        return $feed['error'];
     }
 }
