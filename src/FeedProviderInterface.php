@@ -59,6 +59,7 @@ interface FeedProviderInterface
      * @param  integer $count
      * @return array
      * @throws FeedProviderErrorException
+     * @deprecated Use getCanonicalItems method
      */
     public function getItems($count = 5);
 
