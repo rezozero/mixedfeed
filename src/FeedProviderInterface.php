@@ -32,6 +32,12 @@ interface FeedProviderInterface
     /**
      * @param int $count
      *
+     * @return bool
+     */
+    public function isCacheHit($count = 5): bool;
+    /**
+     * @param int $count
+     *
      * @return \Generator
      */
     public function getRequests($count = 5): \Generator;
@@ -53,6 +59,7 @@ interface FeedProviderInterface
      * @param  integer $count
      * @return array
      * @throws FeedProviderErrorException
+     * @deprecated Use getCanonicalItems method
      */
     public function getItems($count = 5);
 
@@ -62,6 +69,7 @@ interface FeedProviderInterface
      * @param int $count
      *
      * @return mixed
+     * @throws FeedProviderErrorException
      */
     public function getCanonicalItems($count = 5);
 
@@ -99,4 +107,9 @@ interface FeedProviderInterface
      * @return string
      */
     public function getCanonicalMessage($item);
+
+    /**
+     * @return bool
+     */
+    public function supportsRequestPool(): bool;
 }

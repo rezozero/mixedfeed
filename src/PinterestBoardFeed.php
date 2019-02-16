@@ -86,11 +86,6 @@ class PinterestBoardFeed extends AbstractFeedProvider
         );
     }
 
-    protected function getFeed($count = 5): array
-    {
-        return $this->getRawFeed($count)->data;
-    }
-
     /**
      * {@inheritdoc}
      */
@@ -115,22 +110,6 @@ class PinterestBoardFeed extends AbstractFeedProvider
     public function getFeedPlatform()
     {
         return 'pinterest_pin';
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function isValid($feed)
-    {
-        return null !== $feed && is_array($feed) && !isset($feed['error']);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getErrors($feed)
-    {
-        return $feed['error'];
     }
 
     /**

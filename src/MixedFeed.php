@@ -25,6 +25,8 @@
  */
 namespace RZ\MixedFeed;
 
+use GuzzleHttp\Pool;
+use GuzzleHttp\Psr7\Response;
 use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Exception\FeedProviderErrorException;
 use RZ\MixedFeed\MockObject\ErroredFeedItem;
@@ -90,24 +92,9 @@ class MixedFeed extends AbstractFeedProvider
                     ]);
                 }
             }
-
-            usort($list, function (\stdClass $a, \stdClass $b) {
-                $aDT = $a->normalizedDate;
-                $bDT = $b->normalizedDate;
-
-                if ($aDT == $bDT) {
-                    return 0;
-                }
-                // ASC sorting
-                if ($this->sortDirection === static::ASC) {
-                    return ($aDT > $bDT) ? 1 : -1;
-                }
-                // DESC sorting
-                return ($aDT > $bDT) ? -1 : 1;
-            });
         }
 
-        return $list;
+        return $this->sortFeedObjects($list);
     }
 
     /**
@@ -133,24 +120,57 @@ class MixedFeed extends AbstractFeedProvider
                     ]);
                 }
             }
-
-            usort($list, function (FeedItem $a, FeedItem $b) {
-                $aDT = $a->getDateTime();
-                $bDT = $b->getDateTime();
-
-                if ($aDT == $bDT) {
-                    return 0;
-                }
-                // ASC sorting
-                if ($this->sortDirection === static::ASC) {
-                    return ($aDT > $bDT) ? 1 : -1;
-                }
-                // DESC sorting
-                return ($aDT > $bDT) ? -1 : 1;
-            });
         }
+        return $this->sortFeedItems($list);
+    }
 
-        return $list;
+    /**
+     * @param FeedItem[] $feedItems
+     *
+     * @return array
+     */
+    protected function sortFeedItems(array $feedItems): array
+    {
+        usort($feedItems, function (FeedItem $a, FeedItem $b) {
+            $aDT = $a->getDateTime();
+            $bDT = $b->getDateTime();
+
+            if ($aDT == $bDT) {
+                return 0;
+            }
+            // ASC sorting
+            if ($this->sortDirection === static::ASC) {
+                return ($aDT > $bDT) ? 1 : -1;
+            }
+            // DESC sorting
+            return ($aDT > $bDT) ? -1 : 1;
+        });
+        return $feedItems;
+    }
+
+    /**
+     * @param \stdClass[] $items
+     *
+     * @return array
+     */
+    protected function sortFeedObjects(array $items)
+    {
+        usort($items, function (\stdClass $a, \stdClass $b) {
+            $aDT = $a->normalizedDate;
+            $bDT = $b->normalizedDate;
+
+            if ($aDT == $bDT) {
+                return 0;
+            }
+            // ASC sorting
+            if ($this->sortDirection === static::ASC) {
+                return ($aDT > $bDT) ? 1 : -1;
+            }
+            // DESC sorting
+            return ($aDT > $bDT) ? -1 : 1;
+        });
+
+        return $items;
     }
 
     /**
@@ -200,6 +220,75 @@ class MixedFeed extends AbstractFeedProvider
     {
         trigger_error('getFeed method must not be called in MixedFeed.', E_USER_ERROR);
         return [];
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getAsyncCanonicalItems($count = 5): array
+    {
+        if (count($this->providers) === 0) {
+            throw new \RuntimeException('No provider were registered');
+        }
+        $perProviderCount = floor($count / count($this->providers));
+        $list = [];
+        $requests = [];
+        /** @var FeedProviderInterface $provider */
+        foreach ($this->providers as $providerIdx => $provider) {
+            if ($provider->supportsRequestPool() && !$provider->isCacheHit($perProviderCount)) {
+                foreach ($provider->getRequests($perProviderCount) as $i => $request) {
+                    $index = $providerIdx . '.' . $i;
+                    $requests[$index] = $request;
+                }
+            }
+        }
+
+        $client = new \GuzzleHttp\Client();
+        $pool = new Pool($client, $requests, [
+            'concurrency' => 6,
+            'fulfilled' => function ($response, $index) use (&$list, $perProviderCount) {
+                list($providerIdx, $i) = explode('.', $index);
+                $provider = $this->providers[$providerIdx];
+                if ($provider instanceof AbstractFeedProvider &&
+                    $response instanceof Response &&
+                    $response->getStatusCode() === 200) {
+                    $provider->setRawFeed($response->getBody()->getContents());
+                } else {
+                    $provider->setRawFeed(['error' => $response->getReasonPhrase()], false);
+                }
+            },
+            'rejected' => function ($reason, $index) {
+                list($providerIdx, $i) = explode('.', $index);
+                $provider = $this->providers[$providerIdx];
+                if ($provider instanceof AbstractFeedProvider &&
+                    method_exists($reason, 'getMessage')) {
+                    $provider->setRawFeed(['error' => $reason->getMessage()], false);
+                }
+            },
+        ]);
+
+        // Initiate the transfers and create a promise
+        $pool->promise()->wait();
+
+        /** @var FeedProviderInterface $provider */
+        foreach ($this->providers as $providerIdx => $provider) {
+            /*
+             * For providers which already have a cached response
+             */
+            try {
+                $list = array_merge($list, $provider->getCanonicalItems($perProviderCount));
+            } catch (FeedProviderErrorException $e) {
+                $errorItem = new FeedItem();
+                $errorItem->setMessage($e->getMessage());
+                $errorItem->setPlatform($provider->getFeedPlatform() . ' [errored]');
+                $errorItem->setDateTime(new \DateTime());
+                $list = array_merge($list, [
+                    $errorItem
+                ]);
+            }
+        }
+
+        return $this->sortFeedItems($list);
     }
 
     /**

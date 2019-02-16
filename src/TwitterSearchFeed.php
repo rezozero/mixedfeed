@@ -109,7 +109,7 @@ class TwitterSearchFeed extends AbstractTwitterFeed
         return implode(' ', $inlineParams);
     }
 
-    protected function getFeed($count = 5): array
+    protected function getFeed($count = 5)
     {
         $countKey = $this->getCacheKey() . $count;
 

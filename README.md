@@ -83,7 +83,7 @@ return $feed->getItems(12);
 // Or use canonical \RZ\MixedFeed\Canonical\FeedItem objects
 // for a better compatibility and easier templating with multiple
 // social platforms.
-return $feed->getCanonicalItems(12);
+return $feed->getAsyncCanonicalItems(12);
 ```
 
 ## Combine feeds
@@ -106,13 +106,13 @@ For example, if you are using *Twig*, you will be able to include a sub-template
 {% endfor %}
 ```
 
-* `normalizedDate`: This is a crucial parameter as it allows *mixedfeed* library to sort *antechronologically* multiple feeds with heterogeneous structures.
+* `normalizedDate`: This is a critical parameter as it allows *mixedfeed* to sort *reverse chronologically* multiple feeds with heterogeneous structures.
 * `canonicalMessage`: This is a useful field which contains the **text content** for each item over **all** platforms. You can use this to display items texts within a simple loop.
 
 ## Use *FeedItem* instead of raw feed
 
 If you need to serialize your MixedFeed to JSON or XML again, you should not want all the raw data contained in each
-social feed item. So you can use the `$feed->getCanonicalItems(12);` method instead of `getItems` to get a more concise
+social feed item. So you can use the `$feed->getAsyncCanonicalItems(12);` method instead of `getItems` to get a more concise
 object with essential data: `RZ\MixedFeed\Canonical\FeedItem`.
 
 When FeedItem has images, `FeedItem::$images` will hold an array of `RZ\MixedFeed\Canonical\Image` objects to
@@ -143,17 +143,18 @@ By default it is set for `7200` seconds, so you can adjust it to invalidate doct
 ## Create your own feed provider
 
 There are plenty of APIs on the internet, and this tool won’t be able to handle them all.
-No problem, you can easily create your own feed provider to use in *mixedfeed*. You just have to create a new *class* that
-will inherit from `RZ\MixedFeed\AbstractFeedProvider`. Then you will have to implement each method from `FeedProviderInterface`:
+But this is not a problem, you can easily create your own feed provider in *mixedfeed*. You just have to create a new *class* that
+will inherit from `RZ\MixedFeed\AbstractFeedProvider`. Then you will have to implement some methods from `FeedProviderInterface`:
 
+* `getRequests($count = 5): \Generator` method which return a *Guzzle* `Request` generator to be transformed to a response. This is 
+the best option as it will enable async request pooling.
+* `supportsRequestPool(): bool` method should return if your provider can be pooled to enhance performances. If you are using a third party library to fetch your data (such as some platform SDK), you should set it to `false`.
 * `createFeedItemFromObject($item)` method which transform a raw feed object into a canonical `RZ\MixedFeed\Canonical\FeedItem` and `RZ\MixedFeed\Canonical\Image`
 * `getDateTime` method to look for the critical datetime field in your feed.
 * `getFeed` method to consume your API endpoint with a count limit and take care of caching your responses. 
-This method **must convert your own feed items into `\stdClass` objects.**
+This method **must convert your own feed items into `\stdClass` objects, not arrays.**
 * `getCanonicalMessage` method to look for the important text content in your feed items.
 * `getFeedPlatform` method to get a global text identifier for your feed items.
-* `isValid` method to check if API call has succeeded regarding feed content.
-* `getErrors` method to errors from API feed that did not succeed.
 * then a *constructor* that will be handy to use directly in the MixedFeed initialization.
 
 Feel free to check our existing Feed providers to see how they work. And we strongly advise you to

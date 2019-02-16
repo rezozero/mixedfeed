@@ -56,10 +56,39 @@ class MediumFeed extends AbstractFeedProvider
         );
     }
 
+    /**
+     * @inheritDoc
+     */
+    public function setRawFeed($rawFeed, $json = true): AbstractFeedProvider
+    {
+        if ($json === true) {
+            $rawFeed = str_replace('])}while(1);</x>', '', $rawFeed);
+            $rawFeed = json_decode($rawFeed);
+            if ('No error' !== $jsonError = json_last_error_msg()) {
+                throw new \RuntimeException($jsonError);
+            }
+        }
+        $this->rawFeed = $rawFeed;
+        return $this;
+    }
+
+
     protected function getRawFeed($count = 5)
     {
+        $countKey = $this->getCacheKey() . $count;
+
+        if (null !== $this->rawFeed) {
+            if (null !== $this->cacheProvider &&
+                !$this->cacheProvider->contains($countKey)) {
+                $this->cacheProvider->save(
+                    $countKey,
+                    $this->rawFeed,
+                    $this->ttl
+                );
+            }
+            return $this->rawFeed;
+        }
         try {
-            $countKey = $this->getCacheKey() . $count;
             if (null !== $this->cacheProvider &&
                 $this->cacheProvider->contains($countKey)) {
                 return $this->cacheProvider->fetch($countKey);
@@ -70,6 +99,9 @@ class MediumFeed extends AbstractFeedProvider
             $raw = $response->getBody()->getContents();
             $raw = str_replace('])}while(1);</x>', '', $raw);
             $body = json_decode($raw);
+            if ('No error' !== $jsonError = json_last_error_msg()) {
+                throw new \RuntimeException($jsonError);
+            }
 
             if (null !== $this->cacheProvider) {
                 $this->cacheProvider->save(
@@ -150,22 +182,6 @@ class MediumFeed extends AbstractFeedProvider
         }
 
         return "";
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function isValid($feed)
-    {
-        return null !== $feed && is_array($feed) && !isset($feed['error']);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getErrors($feed)
-    {
-        return $feed['error'];
     }
 
     /**
