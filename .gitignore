@@ -42,8 +42,12 @@ Temporary Items
 sftp-config.json
 
 test.php
+/.env.dev
+/.env.prod
+!/.env
 /cache
-
+/var/cache/*
+!/var/cache/.gitkeep
 
 ### PhpStorm+all Patch ###
 # Ignores the whole idea folder
