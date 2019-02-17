@@ -3,7 +3,7 @@
 > A PHP library to rule social-feeds, to entangle them with magic, a PHP library to gather them and bind them in darkness
 
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/ed3544de-7d64-4ef9-a551-c61a66fb668d/mini.png)](https://insight.sensiolabs.com/projects/ed3544de-7d64-4ef9-a551-c61a66fb668d)
-![License](http://img.shields.io/:license-mit-blue.svg?style=flat) ![Packagist](https://img.shields.io/packagist/v/rezozero/mixedfeed.svg?style=flat) ![Docker Automated build](https://img.shields.io/docker/automated/rezozero/mixedfeed.svg?style=flat) ![Docker Build Status](https://img.shields.io/docker/build/rezozero/mixedfeed.svg?style=flat)
+![License](http://img.shields.io/:license-mit-blue.svg?style=flat) [![Packagist](https://img.shields.io/packagist/v/rezozero/mixedfeed.svg?style=flat)](https://packagist.org/packages/rezozero/mixedfeed) [![Docker Automated build](https://img.shields.io/docker/automated/rezozero/mixedfeed.svg?style=flat)](https://hub.docker.com/r/rezozero/mixedfeed) [![Docker Build Status](https://img.shields.io/docker/build/rezozero/mixedfeed.svg?style=flat)](https://hub.docker.com/r/rezozero/mixedfeed)
 
 - [Use standalone Docker server](#use-standalone-docker-server)
   * [Available environment variables](#available-environment-variables)
