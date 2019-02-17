@@ -37,13 +37,16 @@ class ProviderResolver
                 array_push($feedProviders, $facebookProvider);
             }
         }
-        if (false !== $instagramUserId = getenv('MF_INSTAGRAM_USER_ID')) {
-            $instagramProvider = new InstagramFeed(
-                $instagramUserId,
-                getenv('MF_INSTAGRAM_ACCESS_TOKEN'),
-                $cache
-            );
-            array_push($feedProviders, $instagramProvider);
+        if (false !== $instagramUserIds = getenv('MF_INSTAGRAM_USER_ID')) {
+            $instagramUserIds = explode(',', $instagramUserIds);
+            foreach ($instagramUserIds as $instagramUserId) {
+                $instagramProvider = new InstagramFeed(
+                    $instagramUserId,
+                    getenv('MF_INSTAGRAM_ACCESS_TOKEN'),
+                    $cache
+                );
+                array_push($feedProviders, $instagramProvider);
+            }
         }
         if (false !== $instagramOEmbedId = getenv('MF_INSTAGRAM_OEMBED_ID')) {
             $instagramOEmbedProvider = new InstagramOEmbedFeed(
@@ -62,13 +65,16 @@ class ProviderResolver
                 array_push($feedProviders, $mediumProvider);
             }
         }
-        if (false !== $pinterestBoardId = getenv('MF_PINTEREST_BOARD_ID')) {
-            $pinterestProvider = new PinterestBoardFeed(
-                $pinterestBoardId,
-                getenv('MF_PINTEREST_ACCESS_TOKEN'),
-                $cache
-            );
-            array_push($feedProviders, $pinterestProvider);
+        if (false !== $pinterestBoardIds = getenv('MF_PINTEREST_BOARD_ID')) {
+            $pinterestBoardIds = explode(',', $pinterestBoardIds);
+            foreach ($pinterestBoardIds as $pinterestBoardId) {
+                $pinterestProvider = new PinterestBoardFeed(
+                    $pinterestBoardId,
+                    getenv('MF_PINTEREST_ACCESS_TOKEN'),
+                    $cache
+                );
+                array_push($feedProviders, $pinterestProvider);
+            }
         }
         if (false !== $githubReleasesRepos = getenv('MF_GITHUB_RELEASES_REPOSITORY')) {
             $githubReleasesRepos = explode(',', $githubReleasesRepos);
