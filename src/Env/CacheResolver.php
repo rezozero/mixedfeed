@@ -3,7 +3,6 @@
 
 namespace RZ\MixedFeed\Env;
 
-
 use Doctrine\Common\Cache\ApcuCache;
 use Doctrine\Common\Cache\ArrayCache;
 use Doctrine\Common\Cache\CacheProvider;

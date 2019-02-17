@@ -10,6 +10,8 @@ use RZ\MixedFeed\InstagramFeed;
 use RZ\MixedFeed\InstagramOEmbedFeed;
 use RZ\MixedFeed\MediumFeed;
 use RZ\MixedFeed\PinterestBoardFeed;
+use RZ\MixedFeed\TwitterFeed;
+use RZ\MixedFeed\TwitterSearchFeed;
 
 class ProviderResolver
 {
@@ -27,7 +29,10 @@ class ProviderResolver
                 $facebookProvider = new FacebookPageFeed(
                     $facebookPageId,
                     getenv('MF_FACEBOOK_ACCESS_TOKEN'),
-                    $cache
+                    $cache,
+                    getenv('MF_FACEBOOK_FIELDS') ?
+                        explode(',', getenv('MF_FACEBOOK_FIELDS')):
+                        []
                 );
                 array_push($feedProviders, $facebookProvider);
             }
@@ -86,6 +91,36 @@ class ProviderResolver
                 );
                 array_push($feedProviders, $githubCommitsProvider);
             }
+        }
+        if (false !== $twitterUserIds = getenv('MF_TWITTER_USER_ID')) {
+            $twitterUserIds = explode(',', $twitterUserIds);
+            foreach ($twitterUserIds as $twitterUserId) {
+                $twitterProvider = new TwitterFeed(
+                    $twitterUserId,
+                    getenv('MF_TWITTER_CONSUMER_KEY'),
+                    getenv('MF_TWITTER_CONSUMER_SECRET'),
+                    getenv('MF_TWITTER_ACCESS_TOKEN'),
+                    getenv('MF_TWITTER_ACCESS_TOKEN_SECRET'),
+                    $cache,
+                    true,
+                    false,
+                    (bool) getenv('MF_TWITTER_EXTENDED_MODE')
+                );
+                array_push($feedProviders, $twitterProvider);
+            }
+        }
+        if (false !== $twitterSearch = getenv('MF_TWITTER_SEARCH_QUERY')) {
+            parse_str($twitterSearch, $searchParams);
+            $twitterSearchProvider = new TwitterSearchFeed(
+                $searchParams,
+                getenv('MF_TWITTER_CONSUMER_KEY'),
+                getenv('MF_TWITTER_CONSUMER_SECRET'),
+                getenv('MF_TWITTER_ACCESS_TOKEN'),
+                getenv('MF_TWITTER_ACCESS_TOKEN_SECRET'),
+                $cache,
+                (bool) getenv('MF_TWITTER_EXTENDED_MODE')
+            );
+            array_push($feedProviders, $twitterSearchProvider);
         }
 
         return $feedProviders;

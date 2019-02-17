@@ -41,6 +41,7 @@ Temporary Items
 # sftp configuration file
 sftp-config.json
 
+docker-compose.yml
 test.php
 /.env.dev
 /.env.prod
