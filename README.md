@@ -9,7 +9,7 @@
   * [Available environment variables](#available-environment-variables)
 - [Install as library](#install-as-library)
 - [Combine feeds](#combine-feeds)
-- [Use *FeedItem* instead of raw feed](#use--feeditem--instead-of-raw-feed)
+- [Use *FeedItem* instead of raw feed](#use-feeditem-instead-of-raw-feed)
 - [Feed providers](#feed-providers)
 - [Modify cache TTL](#modify-cache-ttl)
 - [Create your own feed provider](#create-your-own-feed-provider)
