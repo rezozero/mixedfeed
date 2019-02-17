@@ -156,7 +156,19 @@ For example, if you are using *Twig*, you will be able to include a sub-template
 
 If you need to serialize your MixedFeed to JSON or XML again, you should not want all the raw data contained in each
 social feed item. So you can use the `$feed->getAsyncCanonicalItems(12);` method instead of `getItems` to get a more concise
-object with essential data: `RZ\MixedFeed\Canonical\FeedItem`.
+object with essential data: `RZ\MixedFeed\Canonical\FeedItem`. *FeedItem* will provide these fields:
+
+- id `string`
+- platform `string`
+- author `string`
+- link `string`
+- title `string`
+- message `string`
+- images `Image[]`
+    - url `string` 
+    - width `integer` 
+    - height `integer` 
+- dateTime `DateTime`
 
 When FeedItem has images, `FeedItem::$images` will hold an array of `RZ\MixedFeed\Canonical\Image` objects to
 have better access to its `url`, `width` and `height` if they're available.
@@ -168,7 +180,7 @@ method.
 
 |  Feed provider class  |  Description | `feedItemPlatform` |
 | -------------- | ---------------- | ------------------ |
-| Medium | Call over `https://medium.com/@username/latest` endpoint. It only needs a `$username`  | `medium` |
+| MediumFeed | Call over `https://medium.com/@username/latest` endpoint. It only needs a `$username`  | `medium` |
 | InstagramOEmbedFeed | Call over `https://api.instagram.com/oembed/` endpoint. It only needs a `$embedUrls` array | `instagram_oembed` |
 | InstagramFeed | Call over `/v1/users/$userId/media/recent/` endpoint. It needs a `$userId` and an `$accessToken` | `instagram` |
 | TwitterFeed | Call over `statuses/user_timeline` endpoint. It requires a `$userId`, a `$consumerKey`, a `$consumerSecret`, an `$accessToken` and an `$accessTokenSecret`. Be careful, this [endpoint](https://dev.twitter.com/rest/reference/get/statuses/user_timeline) can **only return up to 3,200 of a user’s most recent Tweets**, your item count could be lesser than expected. In the same way, Twitter removes retweets after retrieving the items count. | `twitter` |
