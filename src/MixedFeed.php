@@ -25,7 +25,7 @@
  */
 namespace RZ\MixedFeed;
 
-use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Client;
 use GuzzleHttp\Pool;
 use GuzzleHttp\Psr7\Response;
 use RZ\MixedFeed\Canonical\FeedItem;
@@ -75,7 +75,7 @@ class MixedFeed extends AbstractFeedProvider
     }
 
     /**
-     * {@inheritdoc}
+     * @deprecated
      */
     public function getItems($count = 5)
     {
@@ -244,7 +244,7 @@ class MixedFeed extends AbstractFeedProvider
             }
         }
 
-        $client = new \GuzzleHttp\Client();
+        $client = new Client();
         $pool = new Pool($client, $requests, [
             'concurrency' => 6,
             'fulfilled' => function ($response, $index) use (&$list, $perProviderCount) {

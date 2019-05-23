@@ -8,7 +8,7 @@ RUN apk add --no-cache shadow \
     && curl -sS https://getcomposer.org/installer | \
        php -- --install-dir=/usr/bin/ --filename=composer \
     && composer install --no-plugins --no-scripts --prefer-dist \
-    && composer dump-autoload --optimize \
+    && composer dump-autoload --optimize --apcu \
     && usermod -u ${USER_UID} www-data \
     && mkdir -p /var/www/html/tmp/client_body \
     && chown -R www-data:www-data /var/www/html/

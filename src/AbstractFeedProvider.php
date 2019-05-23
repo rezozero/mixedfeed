@@ -26,6 +26,7 @@
 namespace RZ\MixedFeed;
 
 use Doctrine\Common\Cache\CacheProvider;
+use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Exception\FeedProviderErrorException;
@@ -80,6 +81,7 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
         if ($this->isValid($rawFeed)) {
             return $rawFeed;
         }
+        return [];
     }
 
     abstract protected function getCacheKey(): string;
@@ -141,7 +143,7 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
                 return $this->cacheProvider->fetch($countKey);
             }
 
-            $client = new \GuzzleHttp\Client([
+            $client = new Client([
                 'http_errors' => true,
             ]);
             $response = $client->send($this->getRequests($count)->current());

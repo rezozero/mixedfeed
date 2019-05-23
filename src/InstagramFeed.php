@@ -89,6 +89,7 @@ class InstagramFeed extends AbstractFeedProvider
         if ($this->isValid($rawFeed)) {
             return $rawFeed->data;
         }
+        return [];
     }
 
     /**
