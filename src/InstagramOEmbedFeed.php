@@ -17,12 +17,17 @@ class InstagramOEmbedFeed extends AbstractFeedProvider
     /**
      * InstagramOEmbedFeed constructor.
      *
-     * @param                    $embedUrls
+     * @param string[]|array $embedUrls
      * @param CacheProvider|null $cacheProvider
      */
     public function __construct($embedUrls, CacheProvider $cacheProvider = null)
     {
         parent::__construct($cacheProvider);
+        foreach ($embedUrls as $i => $url) {
+            if (0 === preg_match('#^https?:\/\/www\.instagram\.com\/p\/#', $url)) {
+                $embedUrls[$i] = 'https://www.instagram.com/p/' . $url;
+            }
+        }
         $this->embedUrls = $embedUrls;
     }
 

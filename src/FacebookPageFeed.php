@@ -114,7 +114,11 @@ class FacebookPageFeed extends AbstractFeedProvider
 
     protected function getFeed($count = 5)
     {
-        return $this->getRawFeed($count)->data;
+        $rawFeed = $this->getRawFeed($count);
+        if (is_array($rawFeed) && isset($rawFeed['error'])) {
+            return $rawFeed;
+        }
+        return $rawFeed->data;
     }
 
     /**

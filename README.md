@@ -1,19 +1,62 @@
 # mixedfeed
 
-> A PHP library to rule them all, to entangle them with magic, a PHP library to gather them and bind them in darkness
+> A PHP library to rule social-feeds, to entangle them with magic, a PHP library to gather them and bind them in darkness
 
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/ed3544de-7d64-4ef9-a551-c61a66fb668d/mini.png)](https://insight.sensiolabs.com/projects/ed3544de-7d64-4ef9-a551-c61a66fb668d)
-![License](http://img.shields.io/:license-mit-blue.svg?style=flat) ![Packagist](https://img.shields.io/packagist/v/rezozero/mixedfeed.svg?style=flat)
+![License](http://img.shields.io/:license-mit-blue.svg?style=flat) [![Packagist](https://img.shields.io/packagist/v/rezozero/mixedfeed.svg?style=flat)](https://packagist.org/packages/rezozero/mixedfeed) [![Docker Automated build](https://img.shields.io/docker/automated/rezozero/mixedfeed.svg?style=flat)](https://hub.docker.com/r/rezozero/mixedfeed) [![Docker Build Status](https://img.shields.io/docker/build/rezozero/mixedfeed.svg?style=flat)](https://hub.docker.com/r/rezozero/mixedfeed)
 
-- [Install](#install)
+- [Use standalone Docker server](#use-standalone-docker-server)
+  * [Available environment variables](#available-environment-variables)
+- [Install as library](#install-as-library)
 - [Combine feeds](#combine-feeds)
-- [Use *FeedItem* instead of raw feed](#use--feeditem--instead-of-raw-feed)
+- [Use *FeedItem* instead of raw feed](#use-feeditem-instead-of-raw-feed)
 - [Feed providers](#feed-providers)
 - [Modify cache TTL](#modify-cache-ttl)
 - [Create your own feed provider](#create-your-own-feed-provider)
   * [Create a feed provider from a *Doctrine* repository](#create-a-feed-provider-from-a--doctrine--repository)
 
-## Install
+## Use standalone Docker server
+
+```
+docker pull rezozero/mixedfeed
+
+docker run -p 8080:80 \ 
+    -e MF_FACEBOOK_PAGE_ID="xxx" \
+    -e MF_FACEBOOK_ACCESS_TOKEN="xxxx" \ 
+    -e MF_INSTAGRAM_USER_ID="xxx" \
+    -e MF_INSTAGRAM_ACCESS_TOKEN="xxxx" \ 
+    -e MF_CACHE_PROVIDER="apcu" \
+    -e MF_FEED_LENGTH="30" \ 
+    rezozero/mixedfeed
+```
+
+### Available environment variables
+
+| Name              | Default value | Multiple? (comma seperated) |
+| ----------------- | ------------- | --------------------------- |
+| MF_CACHE_PROVIDER | array | |
+| MF_FEED_LENGTH | 12 | |
+| MF_FACEBOOK_PAGE_ID | | ✅ |
+| MF_FACEBOOK_ACCESS_TOKEN | | |
+| MF_FACEBOOK_FIELDS | from,link,picture,full_picture,message,story,type,created_time,source,status_type | ✅ |
+| MF_INSTAGRAM_USER_ID | | ✅ |
+| MF_INSTAGRAM_ACCESS_TOKEN | | |
+| MF_GITHUB_RELEASES_REPOSITORY | | ✅ |
+| MF_GITHUB_COMMITS_REPOSITORY | | ✅ |
+| MF_GITHUB_ACCESS_TOKEN | | |
+| MF_MEDIUM_USER_ID | | ✅ |
+| MF_PINTEREST_BOARD_ID | | ✅ |
+| MF_PINTEREST_ACCESS_TOKEN | | |
+| MF_INSTAGRAM_OEMBED_ID | | ✅ |
+| MF_TWITTER_SEARCH_QUERY | | |
+| MF_TWITTER_USER_ID | | ✅ |
+| MF_TWITTER_ACCESS_TOKEN | | |
+| MF_TWITTER_ACCESS_TOKEN_SECRET | | |
+| MF_TWITTER_CONSUMER_KEY | | |
+| MF_TWITTER_CONSUMER_SECRET | | |
+| MF_TWITTER_EXTENDED_MODE | 0 | |
+
+## Install as library
 
 *mixedfeed* v2+ needs at least PHP **7.2**, check your server configuration.
 
@@ -113,7 +156,19 @@ For example, if you are using *Twig*, you will be able to include a sub-template
 
 If you need to serialize your MixedFeed to JSON or XML again, you should not want all the raw data contained in each
 social feed item. So you can use the `$feed->getAsyncCanonicalItems(12);` method instead of `getItems` to get a more concise
-object with essential data: `RZ\MixedFeed\Canonical\FeedItem`.
+object with essential data: `RZ\MixedFeed\Canonical\FeedItem`. *FeedItem* will provide these fields:
+
+- id `string`
+- platform `string`
+- author `string`
+- link `string`
+- title `string`
+- message `string`
+- images `Image[]`
+    - url `string` 
+    - width `integer` 
+    - height `integer` 
+- dateTime `DateTime`
 
 When FeedItem has images, `FeedItem::$images` will hold an array of `RZ\MixedFeed\Canonical\Image` objects to
 have better access to its `url`, `width` and `height` if they're available.
@@ -125,7 +180,7 @@ method.
 
 |  Feed provider class  |  Description | `feedItemPlatform` |
 | -------------- | ---------------- | ------------------ |
-| Medium | Call over `https://medium.com/@username/latest` endpoint. It only needs a `$username`  | `medium` |
+| MediumFeed | Call over `https://medium.com/@username/latest` endpoint. It only needs a `$username`  | `medium` |
 | InstagramOEmbedFeed | Call over `https://api.instagram.com/oembed/` endpoint. It only needs a `$embedUrls` array | `instagram_oembed` |
 | InstagramFeed | Call over `/v1/users/$userId/media/recent/` endpoint. It needs a `$userId` and an `$accessToken` | `instagram` |
 | TwitterFeed | Call over `statuses/user_timeline` endpoint. It requires a `$userId`, a `$consumerKey`, a `$consumerSecret`, an `$accessToken` and an `$accessTokenSecret`. Be careful, this [endpoint](https://dev.twitter.com/rest/reference/get/statuses/user_timeline) can **only return up to 3,200 of a user’s most recent Tweets**, your item count could be lesser than expected. In the same way, Twitter removes retweets after retrieving the items count. | `twitter` |

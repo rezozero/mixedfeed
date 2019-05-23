@@ -41,9 +41,14 @@ Temporary Items
 # sftp configuration file
 sftp-config.json
 
+docker-compose.yml
 test.php
+/.env.dev
+/.env.prod
+!/.env
 /cache
-
+/var/cache/*
+!/var/cache/.gitkeep
 
 ### PhpStorm+all Patch ###
 # Ignores the whole idea folder
