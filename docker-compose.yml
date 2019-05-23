@@ -1,0 +1,47 @@
+version: '3'
+services:
+  mixedfeed:
+    build: .
+    environment:
+      MF_CACHE_PROVIDER: apcu
+      MF_FEED_LENGTH: 12
+      # MF_FACEBOOK_PAGE_ID: ""
+      # MF_FACEBOOK_ACCESS_TOKEN: ""
+      MF_FACEBOOK_FIELDS: "from,link,picture,full_picture,message,story,type,created_time,source,status_type"
+
+      # MF_INSTAGRAM_USER_ID: ""
+      # MF_INSTAGRAM_ACCESS_TOKEN: ""
+
+      # MF_GITHUB_RELEASES_REPOSITORY: ""
+      # MF_GITHUB_COMMITS_REPOSITORY: ""
+      # MF_GITHUB_ACCESS_TOKEN: ""
+
+      # MF_MEDIUM_USER_ID: ""
+
+      # MF_PINTEREST_BOARD_ID: ""
+      # MF_PINTEREST_ACCESS_TOKEN: ""
+
+      # MF_INSTAGRAM_OEMBED_ID: "embed1,embed2"
+
+      # MF_TWITTER_SEARCH_QUERY: "q: nasa"
+      # MF_TWITTER_USER_ID: ""
+      # MF_TWITTER_ACCESS_TOKEN: ""
+      # MF_TWITTER_ACCESS_TOKEN_SECRET: ""
+      # MF_TWITTER_CONSUMER_KEY: ""
+      # MF_TWITTER_CONSUMER_SECRET: ""
+      MF_TWITTER_EXTENDED_MODE: "0"
+    ports:
+      - 8080:80/tcp
+    labels:
+      - "traefik.enable=true"
+      - "traefik.port=80"
+      - "traefik.frontend.rule=Host:mixedfeed.test"
+      - "traefik.frontend.passHostHeader=true"
+      - "traefik.backend=example"
+    networks:
+      - default
+      - frontproxynet
+
+networks:
+  frontproxynet:
+    external: true
