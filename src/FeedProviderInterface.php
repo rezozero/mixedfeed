@@ -92,13 +92,11 @@ interface FeedProviderInterface
     public function isValid($feed);
 
     /**
-     * Get errors details.
+     * @param string $reason
      *
-     * @param $feed
-     *
-     * @return string
+     * @return $this
      */
-    public function getErrors($feed);
+    public function addError(string $reason): FeedProviderInterface;
 
     /**
      * Get a canonical message from current feed item.

@@ -25,6 +25,7 @@
  */
 namespace RZ\MixedFeed;
 
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Pool;
 use GuzzleHttp\Psr7\Response;
 use RZ\MixedFeed\Canonical\FeedItem;
@@ -254,7 +255,7 @@ class MixedFeed extends AbstractFeedProvider
                     $response->getStatusCode() === 200) {
                     $provider->setRawFeed($response->getBody()->getContents());
                 } else {
-                    $provider->setRawFeed(['error' => $response->getReasonPhrase()], false);
+                    $provider->addError($response->getReasonPhrase());
                 }
             },
             'rejected' => function ($reason, $index) {
@@ -262,7 +263,7 @@ class MixedFeed extends AbstractFeedProvider
                 $provider = $this->providers[$providerIdx];
                 if ($provider instanceof AbstractFeedProvider &&
                     method_exists($reason, 'getMessage')) {
-                    $provider->setRawFeed(['error' => $reason->getMessage()], false);
+                    $provider->addError($reason->getMessage());
                 }
             },
         ]);

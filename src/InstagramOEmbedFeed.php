@@ -7,6 +7,7 @@ use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Psr7\Request;
 use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Canonical\Image;
+use RZ\MixedFeed\Exception\FeedProviderErrorException;
 
 class InstagramOEmbedFeed extends AbstractFeedProvider
 {
@@ -79,6 +80,7 @@ class InstagramOEmbedFeed extends AbstractFeedProvider
      * @param int $count
      *
      * @return array
+     * @throws FeedProviderErrorException
      */
     protected function getRawFeed($count = 5)
     {
@@ -132,9 +134,7 @@ class InstagramOEmbedFeed extends AbstractFeedProvider
 
             return $body;
         } catch (ClientException $e) {
-            return [
-                'error' => $e->getMessage(),
-            ];
+            throw new FeedProviderErrorException($this->getFeedPlatform(), $e->getMessage(), $e);
         }
     }
 

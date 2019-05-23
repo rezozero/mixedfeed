@@ -30,6 +30,7 @@ use GuzzleHttp\Psr7\Request;
 use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Canonical\Image;
 use RZ\MixedFeed\Exception\CredentialsException;
+use RZ\MixedFeed\Exception\FeedProviderErrorException;
 
 /**
  * Get a Pinterest public board pins feed.
@@ -84,6 +85,29 @@ class PinterestBoardFeed extends AbstractFeedProvider
             'GET',
             'https://api.pinterest.com/v1/boards/' . $this->boardId . '/pins?'.$value
         );
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isValid($feed)
+    {
+        if (count($this->errors) > 0) {
+            throw new FeedProviderErrorException($this->getFeedPlatform(), implode(', ', $this->errors));
+        }
+        return isset($feed->data) && is_iterable($feed->data);
+    }
+
+    /**
+     * @param int $count
+     * @return mixed
+     */
+    protected function getFeed($count = 5)
+    {
+        $rawFeed = $this->getRawFeed($count);
+        if ($this->isValid($rawFeed)) {
+            return $rawFeed->data;
+        }
     }
 
     /**

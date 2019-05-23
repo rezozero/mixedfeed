@@ -30,6 +30,7 @@ use GuzzleHttp\Psr7\Request;
 use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Canonical\Image;
 use RZ\MixedFeed\Exception\CredentialsException;
+use RZ\MixedFeed\Exception\FeedProviderErrorException;
 
 /**
  * Get an Instagram user feed.
@@ -84,7 +85,21 @@ class InstagramFeed extends AbstractFeedProvider
 
     protected function getFeed($count = 5)
     {
-        return $this->getRawFeed($count)->data;
+        $rawFeed = $this->getRawFeed($count);
+        if ($this->isValid($rawFeed)) {
+            return $rawFeed->data;
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isValid($feed)
+    {
+        if (count($this->errors) > 0) {
+            throw new FeedProviderErrorException($this->getFeedPlatform(), implode(', ', $this->errors));
+        }
+        return isset($feed->data) && is_iterable($feed->data);
     }
 
     /**

@@ -6,9 +6,9 @@ use JMS\Serializer\SerializerBuilder;
 use RZ\MixedFeed\Response\FeedItemResponse;
 use Symfony\Component\Stopwatch\Stopwatch;
 
-if (PHP_VERSION_ID < 70100) {
+if (PHP_VERSION_ID < 70200) {
     echo 'Your PHP version is ' . phpversion() . "." . PHP_EOL;
-    echo 'You need a least PHP version 7.1.0';
+    echo 'You need a least PHP version 7.2.0';
     exit(1);
 }
 

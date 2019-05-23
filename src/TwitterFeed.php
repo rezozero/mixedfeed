@@ -28,6 +28,7 @@ namespace RZ\MixedFeed;
 use Abraham\TwitterOAuth\TwitterOAuthException;
 use Doctrine\Common\Cache\CacheProvider;
 use RZ\MixedFeed\AbstractFeedProvider\AbstractTwitterFeed;
+use RZ\MixedFeed\Exception\FeedProviderErrorException;
 
 /**
  * Get a Twitter user timeline feed.
@@ -113,9 +114,7 @@ class TwitterFeed extends AbstractTwitterFeed
             }
             return $body;
         } catch (TwitterOAuthException $e) {
-            return [
-                'error' => $e->getMessage(),
-            ];
+            throw new FeedProviderErrorException($this->getFeedPlatform(), $e->getMessage(), $e);
         }
     }
 }

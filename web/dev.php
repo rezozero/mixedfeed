@@ -2,13 +2,14 @@
 use JMS\Serializer\SerializerBuilder;
 use RZ\MixedFeed\Env\CacheResolver;
 use RZ\MixedFeed\Env\ProviderResolver;
+use RZ\MixedFeed\MixedFeed;
 use RZ\MixedFeed\Response\FeedItemResponse;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\Stopwatch\Stopwatch;
 
-if (PHP_VERSION_ID < 70100) {
+if (PHP_VERSION_ID < 70200) {
     echo 'Your PHP version is ' . phpversion() . "." . PHP_EOL;
-    echo 'You need a least PHP version 7.1.0';
+    echo 'You need a least PHP version 7.2.0';
     exit(1);
 }
 
@@ -23,7 +24,7 @@ if (!isset($_SERVER['APP_ENV'])) {
 
 $sw = new Stopwatch();
 $sw->start('fetch');
-$feed = new \RZ\MixedFeed\MixedFeed(ProviderResolver::parseFromEnvironment(CacheResolver::parseFromEnvironment()));
+$feed = new MixedFeed(ProviderResolver::parseFromEnvironment(CacheResolver::parseFromEnvironment()));
 header('Content-type: application/json');
 header('X-Generator: rezozero/mixedfeed');
 $serializer = SerializerBuilder::create()->build();

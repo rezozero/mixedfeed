@@ -31,6 +31,7 @@ use RZ\MixedFeed\AbstractFeedProvider as BaseFeedProvider;
 use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Canonical\Image;
 use RZ\MixedFeed\Exception\CredentialsException;
+use RZ\MixedFeed\Exception\FeedProviderErrorException;
 
 /**
  * Get a Twitter tweets abstract feed.
@@ -149,6 +150,9 @@ abstract class AbstractTwitterFeed extends BaseFeedProvider
      */
     public function isValid($feed)
     {
+        if (count($this->errors) > 0) {
+            throw new FeedProviderErrorException($this->getFeedPlatform(), implode(', ', $this->errors));
+        }
         return null !== $feed && is_array($feed);
     }
 
