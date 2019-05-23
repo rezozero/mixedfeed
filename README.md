@@ -15,7 +15,7 @@
 
 ## Install
 
-*mixedfeed* v2+ needs at least PHP 7.1, check your server configuration.
+*mixedfeed* v2+ needs at least PHP **7.2**, check your server configuration.
 
 ```shell
 composer require rezozero/mixedfeed
