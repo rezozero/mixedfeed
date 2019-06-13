@@ -34,9 +34,6 @@ class MediumFeed extends AbstractFeedProvider
     public function __construct($username, CacheProvider $cacheProvider = null)
     {
         $this->username = $username;
-        if (substr($username, 0, 1) !== '@') {
-            $this->username = '@'.$username;
-        }
         $this->cacheProvider = $cacheProvider;
     }
 
