@@ -30,9 +30,7 @@ class MediumFeed extends AbstractFeedProvider
     {
         parent::__construct($cacheProvider);
         $this->username = $username;
-        if (substr($username, 0, 1) !== '@') {
-            $this->username = '@'.$username;
-        }
+        $this->cacheProvider = $cacheProvider;
     }
 
     protected function getCacheKey(): string
