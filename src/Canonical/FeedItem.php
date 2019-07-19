@@ -42,9 +42,8 @@ class FeedItem
      * @var \DateTime
      */
     protected $dateTime;
-
     /**
-     * @var array<string>
+     * @var array
      */
     protected $tags = [];
 
@@ -222,7 +221,7 @@ class FeedItem
     /**
      * @return array
      */
-    public function getTags(): array
+    public function getTags()
     {
         return $this->tags;
     }
@@ -232,7 +231,7 @@ class FeedItem
      *
      * @return FeedItem
      */
-    public function setTags(array $tags): FeedItem
+    public function setTags(array $tags)
     {
         $this->tags = $tags;
 
