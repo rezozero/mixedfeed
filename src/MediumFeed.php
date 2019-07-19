@@ -191,6 +191,7 @@ class MediumFeed extends AbstractFeedProvider
         $feedItem->setAuthor($this->name);
         $feedItem->setLink('https://medium.com/'.$this->username.'/'.$item->uniqueSlug);
         $feedItem->setTitle($item->title);
+        $feedItem->setTags($item->virtuals->tags);
         if (isset($item->content) && isset($item->content->subtitle)) {
             $feedItem->setMessage($item->content->subtitle);
         }
