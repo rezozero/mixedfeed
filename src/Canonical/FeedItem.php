@@ -44,6 +44,11 @@ class FeedItem
     protected $dateTime;
 
     /**
+     * @var array<string>
+     */
+    protected $tags = [];
+
+    /**
      * @return string
      */
     public function getId()
@@ -210,6 +215,26 @@ class FeedItem
     public function setLink($link)
     {
         $this->link = $link;
+
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getTags(): array
+    {
+        return $this->tags;
+    }
+
+    /**
+     * @param array $tags
+     *
+     * @return FeedItem
+     */
+    public function setTags(array $tags): FeedItem
+    {
+        $this->tags = $tags;
 
         return $this;
     }
