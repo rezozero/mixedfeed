@@ -16,6 +16,7 @@ services:
       # MF_GITHUB_COMMITS_REPOSITORY: ""
       # MF_GITHUB_ACCESS_TOKEN: ""
 
+      # MF_MEDIUM_USERNAME: ""
       # MF_MEDIUM_USER_ID: ""
 
       # MF_PINTEREST_BOARD_ID: ""
