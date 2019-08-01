@@ -5,15 +5,15 @@
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/ed3544de-7d64-4ef9-a551-c61a66fb668d/mini.png)](https://insight.sensiolabs.com/projects/ed3544de-7d64-4ef9-a551-c61a66fb668d)
 ![License](http://img.shields.io/:license-mit-blue.svg?style=flat) [![Packagist](https://img.shields.io/packagist/v/rezozero/mixedfeed.svg?style=flat)](https://packagist.org/packages/rezozero/mixedfeed) [![Docker Automated build](https://img.shields.io/docker/automated/rezozero/mixedfeed.svg?style=flat)](https://hub.docker.com/r/rezozero/mixedfeed) [![Docker Build Status](https://img.shields.io/docker/build/rezozero/mixedfeed.svg?style=flat)](https://hub.docker.com/r/rezozero/mixedfeed)
 
-- [Use standalone Docker server](#use-standalone-docker-server)
-  * [Available environment variables](#available-environment-variables)
-- [Install as library](#install-as-library)
-- [Combine feeds](#combine-feeds)
-- [Use *FeedItem* instead of raw feed](#use-feeditem-instead-of-raw-feed)
-- [Feed providers](#feed-providers)
-- [Modify cache TTL](#modify-cache-ttl)
-- [Create your own feed provider](#create-your-own-feed-provider)
-  * [Create a feed provider from a *Doctrine* repository](#create-a-feed-provider-from-a--doctrine--repository)
+* [Use standalone Docker server](#use-standalone-docker-server)
+  + [Available environment variables](#available-environment-variables)
+* [Install as library](#install-as-library)
+* [Combine feeds](#combine-feeds)
+* [Use *FeedItem* instead of raw feed](#use--feeditem--instead-of-raw-feed)
+* [Feed providers](#feed-providers)
+* [Modify cache TTL](#modify-cache-ttl)
+* [Create your own feed provider](#create-your-own-feed-provider)
+  + [Create a feed provider from a *Doctrine* repository](#create-a-feed-provider-from-a--doctrine--repository)
 
 ## Use standalone Docker server
 
