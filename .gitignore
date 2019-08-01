@@ -50,6 +50,7 @@ test.php
 /cache
 /var/cache/*
 !/var/cache/.gitkeep
+.phpcs-cache
 
 ### PhpStorm+all Patch ###
 # Ignores the whole idea folder
