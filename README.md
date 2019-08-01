@@ -1,19 +1,62 @@
 # mixedfeed
 
-> A PHP library to rule them all, to entangle them with magic, a PHP library to gather them and bind them in darkness
+> A PHP library to rule social-feeds, to entangle them with magic, a PHP library to gather them and bind them in darkness
 
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/ed3544de-7d64-4ef9-a551-c61a66fb668d/mini.png)](https://insight.sensiolabs.com/projects/ed3544de-7d64-4ef9-a551-c61a66fb668d)
-![License](http://img.shields.io/:license-mit-blue.svg?style=flat) ![Packagist](https://img.shields.io/packagist/v/rezozero/mixedfeed.svg?style=flat)
+![License](http://img.shields.io/:license-mit-blue.svg?style=flat) [![Packagist](https://img.shields.io/packagist/v/rezozero/mixedfeed.svg?style=flat)](https://packagist.org/packages/rezozero/mixedfeed) [![Docker Automated build](https://img.shields.io/docker/automated/rezozero/mixedfeed.svg?style=flat)](https://hub.docker.com/r/rezozero/mixedfeed) [![Docker Build Status](https://img.shields.io/docker/build/rezozero/mixedfeed.svg?style=flat)](https://hub.docker.com/r/rezozero/mixedfeed)
 
-- [Install](#install)
-- [Combine feeds](#combine-feeds)
-- [Use *FeedItem* instead of raw feed](#use--feeditem--instead-of-raw-feed)
-- [Feed providers](#feed-providers)
-- [Modify cache TTL](#modify-cache-ttl)
-- [Create your own feed provider](#create-your-own-feed-provider)
-  * [Create a feed provider from a *Doctrine* repository](#create-a-feed-provider-from-a--doctrine--repository)
+* [Use standalone Docker server](#use-standalone-docker-server)
+  + [Available environment variables](#available-environment-variables)
+* [Install as library](#install-as-library)
+* [Combine feeds](#combine-feeds)
+* [Use *FeedItem* instead of raw feed](#use--feeditem--instead-of-raw-feed)
+* [Feed providers](#feed-providers)
+* [Modify cache TTL](#modify-cache-ttl)
+* [Create your own feed provider](#create-your-own-feed-provider)
+  + [Create a feed provider from a *Doctrine* repository](#create-a-feed-provider-from-a--doctrine--repository)
 
-## Install
+## Use standalone Docker server
+
+```
+docker pull rezozero/mixedfeed
+
+docker run -p 8080:80 \ 
+    -e MF_FACEBOOK_PAGE_ID="xxx" \
+    -e MF_FACEBOOK_ACCESS_TOKEN="xxxx" \ 
+    -e MF_INSTAGRAM_USER_ID="xxx" \
+    -e MF_INSTAGRAM_ACCESS_TOKEN="xxxx" \ 
+    -e MF_CACHE_PROVIDER="apcu" \
+    -e MF_FEED_LENGTH="30" \ 
+    rezozero/mixedfeed
+```
+
+### Available environment variables
+
+| Name              | Default value | Multiple? (comma seperated) |
+| ----------------- | ------------- | --------------------------- |
+| MF_CACHE_PROVIDER | array | |
+| MF_FEED_LENGTH | 12 | |
+| MF_FACEBOOK_PAGE_ID | | ✅ |
+| MF_FACEBOOK_ACCESS_TOKEN | | |
+| MF_FACEBOOK_FIELDS | from,link,picture,full_picture,message,story,type,created_time,source,status_type | ✅ |
+| MF_INSTAGRAM_USER_ID | | ✅ |
+| MF_INSTAGRAM_ACCESS_TOKEN | | |
+| MF_GITHUB_RELEASES_REPOSITORY | | ✅ |
+| MF_GITHUB_COMMITS_REPOSITORY | | ✅ |
+| MF_GITHUB_ACCESS_TOKEN | | |
+| MF_MEDIUM_USER_ID | | ✅ |
+| MF_PINTEREST_BOARD_ID | | ✅ |
+| MF_PINTEREST_ACCESS_TOKEN | | |
+| MF_INSTAGRAM_OEMBED_ID | | ✅ |
+| MF_TWITTER_SEARCH_QUERY | | |
+| MF_TWITTER_USER_ID | | ✅ |
+| MF_TWITTER_ACCESS_TOKEN | | |
+| MF_TWITTER_ACCESS_TOKEN_SECRET | | |
+| MF_TWITTER_CONSUMER_KEY | | |
+| MF_TWITTER_CONSUMER_SECRET | | |
+| MF_TWITTER_EXTENDED_MODE | 0 | |
+
+## Install as library
 
 *mixedfeed* v2+ needs at least PHP **7.2**, check your server configuration.
 
@@ -83,7 +126,7 @@ return $feed->getItems(12);
 // Or use canonical \RZ\MixedFeed\Canonical\FeedItem objects
 // for a better compatibility and easier templating with multiple
 // social platforms.
-return $feed->getCanonicalItems(12);
+return $feed->getAsyncCanonicalItems(12);
 ```
 
 ## Combine feeds
@@ -106,14 +149,26 @@ For example, if you are using *Twig*, you will be able to include a sub-template
 {% endfor %}
 ```
 
-* `normalizedDate`: This is a crucial parameter as it allows *mixedfeed* library to sort *antechronologically* multiple feeds with heterogeneous structures.
+* `normalizedDate`: This is a critical parameter as it allows *mixedfeed* to sort *reverse chronologically* multiple feeds with heterogeneous structures.
 * `canonicalMessage`: This is a useful field which contains the **text content** for each item over **all** platforms. You can use this to display items texts within a simple loop.
 
 ## Use *FeedItem* instead of raw feed
 
 If you need to serialize your MixedFeed to JSON or XML again, you should not want all the raw data contained in each
-social feed item. So you can use the `$feed->getCanonicalItems(12);` method instead of `getItems` to get a more concise
-object with essential data: `RZ\MixedFeed\Canonical\FeedItem`.
+social feed item. So you can use the `$feed->getAsyncCanonicalItems(12);` method instead of `getItems` to get a more concise
+object with essential data: `RZ\MixedFeed\Canonical\FeedItem`. *FeedItem* will provide these fields:
+
+- id `string`
+- platform `string`
+- author `string`
+- link `string`
+- title `string`
+- message `string`
+- images `Image[]`
+    - url `string` 
+    - width `integer` 
+    - height `integer` 
+- dateTime `DateTime`
 
 When FeedItem has images, `FeedItem::$images` will hold an array of `RZ\MixedFeed\Canonical\Image` objects to
 have better access to its `url`, `width` and `height` if they're available.
@@ -125,7 +180,7 @@ method.
 
 |  Feed provider class  |  Description | `feedItemPlatform` |
 | -------------- | ---------------- | ------------------ |
-| Medium | Call over `https://medium.com/username/latest` endpoint. It only needs a `$username` and an optional `$userId` for better consistency over requests (Medium seems to apply cache on their username requests even after changing a query parameter, i.e. post limit). *Medium* allows maximum 14 posts per requests. | `medium` |
+| MediumFeed | Call over `https://medium.com/username/latest` endpoint. It only needs a `$username` and an optional `$userId` for better consistency over requests (Medium seems to apply cache on their username requests even after changing a query parameter, i.e. post limit). *Medium* allows maximum 14 posts per requests. | `medium` |
 | InstagramOEmbedFeed | Call over `https://api.instagram.com/oembed/` endpoint. It only needs a `$embedUrls` array | `instagram_oembed` |
 | InstagramFeed | Call over `/v1/users/$userId/media/recent/` endpoint. It needs a `$userId` and an `$accessToken` | `instagram` |
 | TwitterFeed | Call over `statuses/user_timeline` endpoint. It requires a `$userId`, a `$consumerKey`, a `$consumerSecret`, an `$accessToken` and an `$accessTokenSecret`. Be careful, this [endpoint](https://dev.twitter.com/rest/reference/get/statuses/user_timeline) can **only return up to 3,200 of a user’s most recent Tweets**, your item count could be lesser than expected. In the same way, Twitter removes retweets after retrieving the items count. | `twitter` |
@@ -143,17 +198,18 @@ By default it is set for `7200` seconds, so you can adjust it to invalidate doct
 ## Create your own feed provider
 
 There are plenty of APIs on the internet, and this tool won’t be able to handle them all.
-No problem, you can easily create your own feed provider to use in *mixedfeed*. You just have to create a new *class* that
-will inherit from `RZ\MixedFeed\AbstractFeedProvider`. Then you will have to implement each method from `FeedProviderInterface`:
+But this is not a problem, you can easily create your own feed provider in *mixedfeed*. You just have to create a new *class* that
+will inherit from `RZ\MixedFeed\AbstractFeedProvider`. Then you will have to implement some methods from `FeedProviderInterface`:
 
+* `getRequests($count = 5): \Generator` method which return a *Guzzle* `Request` generator to be transformed to a response. This is 
+the best option as it will enable async request pooling.
+* `supportsRequestPool(): bool` method should return if your provider can be pooled to enhance performances. If you are using a third party library to fetch your data (such as some platform SDK), you should set it to `false`.
 * `createFeedItemFromObject($item)` method which transform a raw feed object into a canonical `RZ\MixedFeed\Canonical\FeedItem` and `RZ\MixedFeed\Canonical\Image`
 * `getDateTime` method to look for the critical datetime field in your feed.
 * `getFeed` method to consume your API endpoint with a count limit and take care of caching your responses. 
-This method **must convert your own feed items into `\stdClass` objects.**
+This method **must convert your own feed items into `\stdClass` objects, not arrays.**
 * `getCanonicalMessage` method to look for the important text content in your feed items.
 * `getFeedPlatform` method to get a global text identifier for your feed items.
-* `isValid` method to check if API call has succeeded regarding feed content.
-* `getErrors` method to errors from API feed that did not succeed.
 * then a *constructor* that will be handy to use directly in the MixedFeed initialization.
 
 Feel free to check our existing Feed providers to see how they work. And we strongly advise you to

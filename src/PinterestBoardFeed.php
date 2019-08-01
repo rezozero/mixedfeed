@@ -26,10 +26,11 @@
 namespace RZ\MixedFeed;
 
 use Doctrine\Common\Cache\CacheProvider;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Psr7\Request;
+use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Canonical\Image;
 use RZ\MixedFeed\Exception\CredentialsException;
+use RZ\MixedFeed\Exception\FeedProviderErrorException;
 
 /**
  * Get a Pinterest public board pins feed.
@@ -40,9 +41,6 @@ class PinterestBoardFeed extends AbstractFeedProvider
 {
     protected $boardId;
     protected $accessToken;
-    protected $cacheProvider;
-    protected $cacheKey;
-
     protected static $timeKey = 'created_at';
 
     /**
@@ -57,10 +55,9 @@ class PinterestBoardFeed extends AbstractFeedProvider
         $accessToken,
         CacheProvider $cacheProvider = null
     ) {
+        parent::__construct($cacheProvider);
         $this->boardId = $boardId;
         $this->accessToken = $accessToken;
-        $this->cacheProvider = $cacheProvider;
-        $this->cacheKey = $this->getFeedPlatform() . $this->boardId;
 
         if (null === $this->accessToken ||
             false === $this->accessToken ||
@@ -69,40 +66,49 @@ class PinterestBoardFeed extends AbstractFeedProvider
         }
     }
 
+    protected function getCacheKey(): string
+    {
+        return $this->getFeedPlatform() . $this->boardId;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getRequests($count = 5): \Generator
+    {
+        $value = http_build_query([
+            'access_token' => $this->accessToken,
+            'limit' => $count,
+            'fields' => 'id,color,created_at,creator,media,image[original],note,link,url',
+        ], null, '&', PHP_QUERY_RFC3986);
+        yield new Request(
+            'GET',
+            'https://api.pinterest.com/v1/boards/' . $this->boardId . '/pins?'.$value
+        );
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isValid($feed)
+    {
+        if (count($this->errors) > 0) {
+            throw new FeedProviderErrorException($this->getFeedPlatform(), implode(', ', $this->errors));
+        }
+        return isset($feed->data) && is_iterable($feed->data);
+    }
+
+    /**
+     * @param int $count
+     * @return mixed
+     */
     protected function getFeed($count = 5)
     {
-        try {
-            $countKey = $this->cacheKey . $count;
-
-            if (null !== $this->cacheProvider &&
-                $this->cacheProvider->contains($countKey)) {
-                return $this->cacheProvider->fetch($countKey);
-            }
-
-            $client = new Client();
-            $response = $client->get('https://api.pinterest.com/v1/boards/' . $this->boardId . '/pins/', [
-                'query' => [
-                    'access_token' => $this->accessToken,
-                    'limit' => $count,
-                    'fields' => 'id,color,created_at,creator,media,image[original],note,link,url',
-                ],
-            ]);
-            $body = json_decode($response->getBody());
-
-            if (null !== $this->cacheProvider) {
-                $this->cacheProvider->save(
-                    $countKey,
-                    $body->data,
-                    $this->ttl
-                );
-            }
-
-            return $body->data;
-        } catch (ClientException $e) {
-            return [
-                'error' => $e->getMessage(),
-            ];
+        $rawFeed = $this->getRawFeed($count);
+        if ($this->isValid($rawFeed)) {
+            return $rawFeed->data;
         }
+        return [];
     }
 
     /**
@@ -132,25 +138,9 @@ class PinterestBoardFeed extends AbstractFeedProvider
     }
 
     /**
-     * {@inheritdoc}
-     */
-    public function isValid($feed)
-    {
-        return null !== $feed && is_array($feed) && !isset($feed['error']);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getErrors($feed)
-    {
-        return $feed['error'];
-    }
-
-    /**
      * @inheritDoc
      */
-    protected function createFeedItemFromObject($item)
+    protected function createFeedItemFromObject($item): FeedItem
     {
         $feedItem = parent::createFeedItemFromObject($item);
         $feedItem->setId($item->id);

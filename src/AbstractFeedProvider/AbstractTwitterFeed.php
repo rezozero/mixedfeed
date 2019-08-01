@@ -28,18 +28,33 @@ namespace RZ\MixedFeed\AbstractFeedProvider;
 use Abraham\TwitterOAuth\TwitterOAuth;
 use Doctrine\Common\Cache\CacheProvider;
 use RZ\MixedFeed\AbstractFeedProvider as BaseFeedProvider;
+use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Canonical\Image;
 use RZ\MixedFeed\Exception\CredentialsException;
+use RZ\MixedFeed\Exception\FeedProviderErrorException;
 
 /**
  * Get a Twitter tweets abstract feed.
  */
 abstract class AbstractTwitterFeed extends BaseFeedProvider
 {
+    /**
+     * Shorter TTL for Twitter
+     * 5 min
+     * @var int
+     */
+    protected $ttl = 60*5;
+    /**
+     * @var string
+     */
     protected $accessToken;
-    protected $cacheProvider;
+    /**
+     * @var TwitterOAuth
+     */
     protected $twitterConnection;
-
+    /**
+     * @var string
+     */
     protected static $timeKey = 'created_at';
 
     /**
@@ -58,8 +73,8 @@ abstract class AbstractTwitterFeed extends BaseFeedProvider
         $accessTokenSecret,
         CacheProvider $cacheProvider = null
     ) {
+        parent::__construct($cacheProvider);
         $this->accessToken = $accessToken;
-        $this->cacheProvider = $cacheProvider;
 
         if (null === $accessToken ||
             false === $accessToken ||
@@ -113,6 +128,16 @@ abstract class AbstractTwitterFeed extends BaseFeedProvider
     }
 
     /**
+     * @param int $count
+     *
+     * @return \Generator
+     */
+    public function getRequests($count = 5): \Generator
+    {
+        throw new \RuntimeException('Twitter cannot be used in async mode');
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function getFeedPlatform()
@@ -125,6 +150,9 @@ abstract class AbstractTwitterFeed extends BaseFeedProvider
      */
     public function isValid($feed)
     {
+        if (count($this->errors) > 0) {
+            throw new FeedProviderErrorException($this->getFeedPlatform(), implode(', ', $this->errors));
+        }
         return null !== $feed && is_array($feed);
     }
 
@@ -148,7 +176,7 @@ abstract class AbstractTwitterFeed extends BaseFeedProvider
     /**
      * @inheritDoc
      */
-    protected function createFeedItemFromObject($item)
+    protected function createFeedItemFromObject($item): FeedItem
     {
         $feedItem = parent::createFeedItemFromObject($item);
         $feedItem->setId($item->id_str);
@@ -168,5 +196,13 @@ abstract class AbstractTwitterFeed extends BaseFeedProvider
         }
 
         return $feedItem;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function supportsRequestPool(): bool
+    {
+        return false;
     }
 }

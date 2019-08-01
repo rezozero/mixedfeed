@@ -28,6 +28,7 @@ namespace RZ\MixedFeed;
 use Abraham\TwitterOAuth\TwitterOAuthException;
 use Doctrine\Common\Cache\CacheProvider;
 use RZ\MixedFeed\AbstractFeedProvider\AbstractTwitterFeed;
+use RZ\MixedFeed\Exception\FeedProviderErrorException;
 
 /**
  * Get a Twitter user timeline feed.
@@ -36,8 +37,6 @@ class TwitterFeed extends AbstractTwitterFeed
 {
     protected $userId;
     protected $accessToken;
-    protected $cacheProvider;
-    protected $cacheKey;
     protected $twitterConnection;
     protected $excludeReplies;
     protected $includeRts;
@@ -49,7 +48,6 @@ class TwitterFeed extends AbstractTwitterFeed
     protected $extended;
 
     /**
-     *
      * @param string $userId
      * @param string $consumerKey
      * @param string $consumerSecret
@@ -59,7 +57,6 @@ class TwitterFeed extends AbstractTwitterFeed
      * @param boolean $excludeReplies
      * @param boolean $includeRts
      * @param bool $extended
-     * @throws Exception\CredentialsException
      */
     public function __construct(
         $userId,
@@ -85,12 +82,16 @@ class TwitterFeed extends AbstractTwitterFeed
         $this->excludeReplies = $excludeReplies;
         $this->includeRts = $includeRts;
         $this->extended = $extended;
-        $this->cacheKey = $this->getFeedPlatform() . $this->userId;
+    }
+
+    protected function getCacheKey(): string
+    {
+        return $this->getFeedPlatform() . $this->userId;
     }
 
     protected function getFeed($count = 5)
     {
-        $countKey = $this->cacheKey . $count;
+        $countKey = $this->getCacheKey() . $count;
 
         try {
             if (null !== $this->cacheProvider &&
@@ -113,9 +114,7 @@ class TwitterFeed extends AbstractTwitterFeed
             }
             return $body;
         } catch (TwitterOAuthException $e) {
-            return [
-                'error' => $e->getMessage(),
-            ];
+            throw new FeedProviderErrorException($this->getFeedPlatform(), $e->getMessage(), $e);
         }
     }
 }

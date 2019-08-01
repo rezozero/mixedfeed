@@ -30,6 +30,19 @@ use RZ\MixedFeed\Exception\FeedProviderErrorException;
 interface FeedProviderInterface
 {
     /**
+     * @param int $count
+     *
+     * @return bool
+     */
+    public function isCacheHit($count = 5): bool;
+    /**
+     * @param int $count
+     *
+     * @return \Generator
+     */
+    public function getRequests($count = 5): \Generator;
+
+    /**
      * Get the social platform name.
      *
      * @return string
@@ -46,6 +59,7 @@ interface FeedProviderInterface
      * @param  integer $count
      * @return array
      * @throws FeedProviderErrorException
+     * @deprecated Use getCanonicalItems method
      */
     public function getItems($count = 5);
 
@@ -55,6 +69,7 @@ interface FeedProviderInterface
      * @param int $count
      *
      * @return mixed
+     * @throws FeedProviderErrorException
      */
     public function getCanonicalItems($count = 5);
 
@@ -77,13 +92,11 @@ interface FeedProviderInterface
     public function isValid($feed);
 
     /**
-     * Get errors details.
+     * @param string $reason
      *
-     * @param $feed
-     *
-     * @return string
+     * @return $this
      */
-    public function getErrors($feed);
+    public function addError(string $reason): FeedProviderInterface;
 
     /**
      * Get a canonical message from current feed item.
@@ -92,4 +105,9 @@ interface FeedProviderInterface
      * @return string
      */
     public function getCanonicalMessage($item);
+
+    /**
+     * @return bool
+     */
+    public function supportsRequestPool(): bool;
 }

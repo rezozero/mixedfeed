@@ -28,13 +28,13 @@ namespace RZ\MixedFeed;
 use Abraham\TwitterOAuth\TwitterOAuthException;
 use Doctrine\Common\Cache\CacheProvider;
 use RZ\MixedFeed\AbstractFeedProvider\AbstractTwitterFeed;
+use RZ\MixedFeed\Exception\FeedProviderErrorException;
 
 /**
  * Get a Twitter search tweets feed.
  */
 class TwitterSearchFeed extends AbstractTwitterFeed
 {
-    protected $cacheKey;
     protected $queryParams;
 
     /**
@@ -85,8 +85,12 @@ class TwitterSearchFeed extends AbstractTwitterFeed
         );
 
         $this->queryParams = array_filter($queryParams);
-        $this->cacheKey = $this->getFeedPlatform() . md5(serialize($queryParams));
         $this->extended = $extended;
+    }
+
+    protected function getCacheKey(): string
+    {
+        return $this->getFeedPlatform() . md5(serialize($this->queryParams));
     }
 
     /**
@@ -108,7 +112,7 @@ class TwitterSearchFeed extends AbstractTwitterFeed
 
     protected function getFeed($count = 5)
     {
-        $countKey = $this->cacheKey . $count;
+        $countKey = $this->getCacheKey() . $count;
 
         try {
             if (null !== $this->cacheProvider &&
@@ -138,12 +142,9 @@ class TwitterSearchFeed extends AbstractTwitterFeed
                     $this->ttl
                 );
             }
-
             return $body->statuses;
         } catch (TwitterOAuthException $e) {
-            return [
-                'error' => $e->getMessage(),
-            ];
+            throw new FeedProviderErrorException($this->getFeedPlatform(), $e->getMessage(), $e);
         }
     }
 

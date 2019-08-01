@@ -5,7 +5,10 @@ namespace RZ\MixedFeed;
 use Doctrine\Common\Cache\CacheProvider;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Psr7\Request;
+use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Canonical\Image;
+use RZ\MixedFeed\Exception\FeedProviderErrorException;
 
 class MediumFeed extends AbstractFeedProvider
 {
@@ -17,14 +20,6 @@ class MediumFeed extends AbstractFeedProvider
      * @var string
      */
     private $username;
-    /**
-     * @var string
-     */
-    private $cacheKey;
-    /**
-     * @var CacheProvider
-     */
-    private $cacheProvider;
     /**
      * @var string
      */
@@ -43,6 +38,7 @@ class MediumFeed extends AbstractFeedProvider
      */
     public function __construct($username, CacheProvider $cacheProvider = null, $userId = null)
     {
+        parent::__construct($cacheProvider);
         $this->username = $username;
         $this->cacheProvider = $cacheProvider;
         $this->userId = $userId;
@@ -58,28 +54,74 @@ class MediumFeed extends AbstractFeedProvider
         }
     }
 
-
-    protected function getFeed($count = 5)
+    protected function getCacheKey(): string
     {
+        return $this->getFeedPlatform() . $this->username;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getRequests($count = 5): \Generator
+    {
+        $value = http_build_query([
+            'format' => 'json',
+            'limit' => $count,
+            'collectionId' => null,
+            'source' => 'latest',
+        ], null, '&', PHP_QUERY_RFC3986);
+        yield new Request(
+            'GET',
+            $this->url . '?' . $value
+        );
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setRawFeed($rawFeed, $json = true): AbstractFeedProvider
+    {
+        if ($json === true) {
+            $rawFeed = str_replace('])}while(1);</x>', '', $rawFeed);
+            $rawFeed = json_decode($rawFeed);
+            if ('No error' !== $jsonError = json_last_error_msg()) {
+                throw new \RuntimeException($jsonError);
+            }
+        }
+        $this->rawFeed = $rawFeed;
+        return $this;
+    }
+
+
+    protected function getRawFeed($count = 5)
+    {
+        $countKey = $this->getCacheKey() . $count;
+
+        if (null !== $this->rawFeed) {
+            if (null !== $this->cacheProvider &&
+                !$this->cacheProvider->contains($countKey)) {
+                $this->cacheProvider->save(
+                    $countKey,
+                    $this->rawFeed,
+                    $this->ttl
+                );
+            }
+            return $this->rawFeed;
+        }
         try {
-            $countKey = $this->cacheKey . $count;
             if (null !== $this->cacheProvider &&
                 $this->cacheProvider->contains($countKey)) {
-                return $this->getTypedFeed($this->cacheProvider->fetch($countKey));
+                return $this->cacheProvider->fetch($countKey);
             }
 
             $client = new Client();
-            $response = $client->get($this->url, [
-                'query' => [
-                    'format' => 'json',
-                    'limit' => $count,
-                    'collectionId' => null,
-                    'source' => 'latest',
-                ],
-            ]);
-            $raw = $response->getBody();
+            $response = $client->send($this->getRequests($count)->current());
+            $raw = $response->getBody()->getContents();
             $raw = str_replace('])}while(1);</x>', '', $raw);
             $body = json_decode($raw);
+            if ('No error' !== $jsonError = json_last_error_msg()) {
+                throw new \RuntimeException($jsonError);
+            }
 
             if (null !== $this->cacheProvider) {
                 $this->cacheProvider->save(
@@ -89,18 +131,26 @@ class MediumFeed extends AbstractFeedProvider
                 );
             }
 
-            return $this->getTypedFeed($body);
+            return $body;
         } catch (ClientException $e) {
-            return [
-                'error' => $e->getMessage(),
-            ];
+            throw new FeedProviderErrorException($this->getFeedPlatform(), $e->getMessage(), $e);
         }
     }
+
+    /**
+     * @inheritDoc
+     */
+    protected function getFeed($count = 5): array
+    {
+        return $this->getTypedFeed($this->getRawFeed($count));
+    }
+
 
     /**
      * @param $body
      *
      * @return array
+     * @throws \Exception
      */
     protected function getTypedFeed($body)
     {
@@ -154,25 +204,9 @@ class MediumFeed extends AbstractFeedProvider
     }
 
     /**
-     * {@inheritdoc}
-     */
-    public function isValid($feed)
-    {
-        return null !== $feed && is_array($feed) && !isset($feed['error']);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getErrors($feed)
-    {
-        return $feed['error'];
-    }
-
-    /**
      * @inheritDoc
      */
-    protected function createFeedItemFromObject($item)
+    protected function createFeedItemFromObject($item): FeedItem
     {
         $feedItem = parent::createFeedItemFromObject($item);
         $feedItem->setId($item->uniqueSlug);
