@@ -3,6 +3,7 @@
 namespace RZ\MixedFeed;
 
 use Doctrine\Common\Cache\CacheProvider;
+use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Psr7\Request;
 use RZ\MixedFeed\Canonical\FeedItem;
@@ -12,6 +13,10 @@ use RZ\MixedFeed\Exception\FeedProviderErrorException;
 class MediumFeed extends AbstractFeedProvider
 {
     /**
+     * @var null
+     */
+    protected $userId;
+    /**
      * @var string
      */
     private $username;
@@ -19,18 +24,34 @@ class MediumFeed extends AbstractFeedProvider
      * @var string
      */
     private $name;
+    /**
+     * @var string
+     */
+    private $url;
 
     /**
      * MediumFeed constructor.
      *
      * @param string        $username
      * @param CacheProvider $cacheProvider
+     * @param null          $userId
      */
-    public function __construct($username, CacheProvider $cacheProvider = null)
+    public function __construct($username, CacheProvider $cacheProvider = null, $userId = null)
     {
         parent::__construct($cacheProvider);
         $this->username = $username;
         $this->cacheProvider = $cacheProvider;
+        $this->userId = $userId;
+
+        if ($this->userId !== null) {
+            /*
+             * If userId is available, use the profile/stream endpoint instead for better consistency
+             * between calls.
+             */
+            $this->url = 'https://medium.com/_/api/users/' . $this->userId . '/profile/stream';
+        } else {
+            $this->url = 'https://medium.com/' . $this->username . '/latest';
+        }
     }
 
     protected function getCacheKey(): string
@@ -51,7 +72,7 @@ class MediumFeed extends AbstractFeedProvider
         ], null, '&', PHP_QUERY_RFC3986);
         yield new Request(
             'GET',
-            'https://medium.com/' . $this->username . '/latest?'.$value
+            $this->url . '?' . $value
         );
     }
 
@@ -93,7 +114,7 @@ class MediumFeed extends AbstractFeedProvider
                 return $this->cacheProvider->fetch($countKey);
             }
 
-            $client = new \GuzzleHttp\Client();
+            $client = new Client();
             $response = $client->send($this->getRequests($count)->current());
             $raw = $response->getBody()->getContents();
             $raw = str_replace('])}while(1);</x>', '', $raw);
@@ -129,6 +150,7 @@ class MediumFeed extends AbstractFeedProvider
      * @param $body
      *
      * @return array
+     * @throws \Exception
      */
     protected function getTypedFeed($body)
     {

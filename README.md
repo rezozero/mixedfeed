@@ -180,7 +180,7 @@ method.
 
 |  Feed provider class  |  Description | `feedItemPlatform` |
 | -------------- | ---------------- | ------------------ |
-| MediumFeed | Call over `https://medium.com/username/latest` endpoint. It only needs a `$username`  | `medium` |
+| MediumFeed | Call over `https://medium.com/username/latest` endpoint. It only needs a `$username` and an optional `$userId` for better consistency over requests (Medium seems to apply cache on their username requests even after changing a query parameter, i.e. post limit). *Medium* allows maximum 14 posts per requests. | `medium` |
 | InstagramOEmbedFeed | Call over `https://api.instagram.com/oembed/` endpoint. It only needs a `$embedUrls` array | `instagram_oembed` |
 | InstagramFeed | Call over `/v1/users/$userId/media/recent/` endpoint. It needs a `$userId` and an `$accessToken` | `instagram` |
 | TwitterFeed | Call over `statuses/user_timeline` endpoint. It requires a `$userId`, a `$consumerKey`, a `$consumerSecret`, an `$accessToken` and an `$accessTokenSecret`. Be careful, this [endpoint](https://dev.twitter.com/rest/reference/get/statuses/user_timeline) can **only return up to 3,200 of a user’s most recent Tweets**, your item count could be lesser than expected. In the same way, Twitter removes retweets after retrieving the items count. | `twitter` |
