@@ -45,6 +45,7 @@ docker-compose.test.yml
 test.php
 /web/test.php
 /.env.dev
+/docker-compose.dev.yml
 /.env.prod
 !/.env
 /cache

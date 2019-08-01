@@ -55,12 +55,23 @@ class ProviderResolver
             );
             array_push($feedProviders, $instagramOEmbedProvider);
         }
-        if (false !== $mediumUserIds = getenv('MF_MEDIUM_USER_ID')) {
-            $mediumUserIds = explode(',', $mediumUserIds);
-            foreach ($mediumUserIds as $mediumUserId) {
+        if (false !== $mediumUserNames = getenv('MF_MEDIUM_USERNAME')) {
+            $mediumUserNames = explode(',', $mediumUserNames);
+            if (false !== $mediumUserIds = getenv('MF_MEDIUM_USER_ID')) {
+                $mediumUserIds = explode(',', $mediumUserIds);
+            } else {
+                $mediumUserIds = [];
+            }
+
+            foreach ($mediumUserNames as $i => $mediumUserName) {
+                $mediumUserId = null;
+                if (!empty($mediumUserIds[$i])) {
+                    $mediumUserId = $mediumUserIds[$i];
+                }
                 $mediumProvider = new MediumFeed(
-                    $mediumUserId,
-                    $cache
+                    $mediumUserName,
+                    $cache,
+                    $mediumUserId
                 );
                 array_push($feedProviders, $mediumProvider);
             }
