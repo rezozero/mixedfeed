@@ -9,30 +9,30 @@
   + [Available environment variables](#available-environment-variables)
 * [Install as library](#install-as-library)
 * [Combine feeds](#combine-feeds)
-* [Use *FeedItem* instead of raw feed](#use--feeditem--instead-of-raw-feed)
+* [Use *FeedItem* instead of raw feed](#use-feeditem-instead-of-raw-feed)
 * [Feed providers](#feed-providers)
 * [Modify cache TTL](#modify-cache-ttl)
 * [Create your own feed provider](#create-your-own-feed-provider)
-  + [Create a feed provider from a *Doctrine* repository](#create-a-feed-provider-from-a--doctrine--repository)
+  + [Create a feed provider from a *Doctrine* repository](#create-a-feed-provider-from-a-doctrine-repository)
 
 ## Use standalone Docker server
 
 ```
 docker pull rezozero/mixedfeed
 
-docker run -p 8080:80 \ 
+docker run -p 8080:80 \
     -e MF_FACEBOOK_PAGE_ID="xxx" \
-    -e MF_FACEBOOK_ACCESS_TOKEN="xxxx" \ 
+    -e MF_FACEBOOK_ACCESS_TOKEN="xxxx" \
     -e MF_INSTAGRAM_USER_ID="xxx" \
-    -e MF_INSTAGRAM_ACCESS_TOKEN="xxxx" \ 
+    -e MF_INSTAGRAM_ACCESS_TOKEN="xxxx" \
     -e MF_CACHE_PROVIDER="apcu" \
-    -e MF_FEED_LENGTH="30" \ 
+    -e MF_FEED_LENGTH="30" \
     rezozero/mixedfeed
 ```
 
 ### Available environment variables
 
-| Name              | Default value | Multiple? (comma seperated) |
+| Name              | Default value | Multiple? (comma separated) |
 | ----------------- | ------------- | --------------------------- |
 | MF_CACHE_PROVIDER | array | |
 | MF_FEED_LENGTH | 12 | |
@@ -44,7 +44,8 @@ docker run -p 8080:80 \
 | MF_GITHUB_RELEASES_REPOSITORY | | ✅ |
 | MF_GITHUB_COMMITS_REPOSITORY | | ✅ |
 | MF_GITHUB_ACCESS_TOKEN | | |
-| MF_MEDIUM_USER_ID | | ✅ |
+| MF_MEDIUM_USERNAME | | ✅ |
+| MF_MEDIUM_USER_ID | *Use same order as in `MF_MEDIUM_USERNAME`* | ✅ |
 | MF_PINTEREST_BOARD_ID | | ✅ |
 | MF_PINTEREST_ACCESS_TOKEN | | |
 | MF_INSTAGRAM_OEMBED_ID | | ✅ |
@@ -58,7 +59,7 @@ docker run -p 8080:80 \
 
 ## Install as library
 
-*mixedfeed* v2+ needs at least PHP **7.2**, check your server configuration.
+*mixedfeed* v3+ needs at least PHP **7.2**, check your server configuration.
 
 ```shell
 composer require rezozero/mixedfeed
@@ -169,6 +170,7 @@ object with essential data: `RZ\MixedFeed\Canonical\FeedItem`. *FeedItem* will p
     - width `integer` 
     - height `integer` 
 - dateTime `DateTime`
+- tags `array` (only used with `MediumFeed`)
 
 When FeedItem has images, `FeedItem::$images` will hold an array of `RZ\MixedFeed\Canonical\Image` objects to
 have better access to its `url`, `width` and `height` if they're available.
@@ -202,7 +204,7 @@ But this is not a problem, you can easily create your own feed provider in *mixe
 will inherit from `RZ\MixedFeed\AbstractFeedProvider`. Then you will have to implement some methods from `FeedProviderInterface`:
 
 * `getRequests($count = 5): \Generator` method which return a *Guzzle* `Request` generator to be transformed to a response. This is 
-the best option as it will enable async request pooling.
+the best option as it will enable **async request pooling**.
 * `supportsRequestPool(): bool` method should return if your provider can be pooled to enhance performances. If you are using a third party library to fetch your data (such as some platform SDK), you should set it to `false`.
 * `createFeedItemFromObject($item)` method which transform a raw feed object into a canonical `RZ\MixedFeed\Canonical\FeedItem` and `RZ\MixedFeed\Canonical\Image`
 * `getDateTime` method to look for the critical datetime field in your feed.
