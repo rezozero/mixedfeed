@@ -3,11 +3,16 @@
 namespace RZ\MixedFeed;
 
 use Doctrine\Common\Cache\CacheProvider;
+use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use RZ\MixedFeed\Canonical\Image;
 
 class MediumFeed extends AbstractFeedProvider
 {
+    /**
+     * @var null
+     */
+    protected $userId;
     /**
      * @var string
      */
@@ -24,17 +29,33 @@ class MediumFeed extends AbstractFeedProvider
      * @var string
      */
     private $name;
+    /**
+     * @var string
+     */
+    private $url;
 
     /**
      * MediumFeed constructor.
      *
      * @param string        $username
      * @param CacheProvider $cacheProvider
+     * @param null          $userId
      */
-    public function __construct($username, CacheProvider $cacheProvider = null)
+    public function __construct($username, CacheProvider $cacheProvider = null, $userId = null)
     {
         $this->username = $username;
         $this->cacheProvider = $cacheProvider;
+        $this->userId = $userId;
+
+        if ($this->userId !== null) {
+            /*
+             * If userId is available, use the profile/stream endpoint instead for better consistency
+             * between calls.
+             */
+            $this->url = 'https://medium.com/_/api/users/' . $this->userId . '/profile/stream';
+        } else {
+            $this->url = 'https://medium.com/' . $this->username . '/latest';
+        }
     }
 
 
@@ -47,8 +68,8 @@ class MediumFeed extends AbstractFeedProvider
                 return $this->getTypedFeed($this->cacheProvider->fetch($countKey));
             }
 
-            $client = new \GuzzleHttp\Client();
-            $response = $client->get('https://medium.com/' . $this->username . '/latest', [
+            $client = new Client();
+            $response = $client->get($this->url, [
                 'query' => [
                     'format' => 'json',
                     'limit' => $count,
