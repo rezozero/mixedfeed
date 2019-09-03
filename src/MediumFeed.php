@@ -28,6 +28,10 @@ class MediumFeed extends AbstractFeedProvider
      * @var string
      */
     private $url;
+    /**
+     * @var bool
+     */
+    private $useLatestPublicationDate = false;
 
     /**
      * MediumFeed constructor.
@@ -187,7 +191,11 @@ class MediumFeed extends AbstractFeedProvider
     public function getDateTime($item)
     {
         $createdAt = new \DateTime();
-        $createdAt->setTimestamp($item->latestPublishedAt/1000);
+        if ($this->isUsingLatestPublicationDate()) {
+            $createdAt->setTimestamp($item->latestPublishedAt/1000);
+        } else {
+            $createdAt->setTimestamp($item->firstPublishedAt/1000);
+        }
         return $createdAt;
     }
 
@@ -241,5 +249,25 @@ class MediumFeed extends AbstractFeedProvider
     public function getName()
     {
         return $this->name;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isUsingLatestPublicationDate(): bool
+    {
+        return $this->useLatestPublicationDate;
+    }
+
+    /**
+     * @param bool $useLatestPublicationDate
+     *
+     * @return MediumFeed
+     */
+    public function setUseLatestPublicationDate(bool $useLatestPublicationDate): MediumFeed
+    {
+        $this->useLatestPublicationDate = $useLatestPublicationDate;
+
+        return $this;
     }
 }
