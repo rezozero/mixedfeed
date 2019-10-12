@@ -32,7 +32,8 @@ class ProviderResolver
                     $cache,
                     getenv('MF_FACEBOOK_FIELDS') ?
                         explode(',', getenv('MF_FACEBOOK_FIELDS')):
-                        []
+                        [],
+                    getenv('MF_FACEBOOK_ENDPOINT')
                 );
                 array_push($feedProviders, $facebookProvider);
             }
