@@ -57,10 +57,12 @@ class FacebookPageFeed extends AbstractFeedProvider
 
     /**
      *
-     * @param string $pageId
-     * @param string $accessToken Your App Token
+     * @param string             $pageId
+     * @param string             $accessToken Your App Token
      * @param CacheProvider|null $cacheProvider
-     * @param array $fields
+     * @param array              $fields
+     * @param string|null        $apiBaseUrl
+     *
      * @throws CredentialsException
      */
     public function __construct(
