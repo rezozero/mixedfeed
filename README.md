@@ -39,6 +39,7 @@ docker run -p 8080:80 \
 | MF_FACEBOOK_PAGE_ID | | ✅ |
 | MF_FACEBOOK_ACCESS_TOKEN | | |
 | MF_FACEBOOK_FIELDS | from,link,picture,full_picture,message,story,type,created_time,source,status_type | ✅ |
+| MF_FACEBOOK_ENDPOINT | https://graph.facebook.com/v2.12/ | |
 | MF_INSTAGRAM_USER_ID | | ✅ |
 | MF_INSTAGRAM_ACCESS_TOKEN | | |
 | MF_GITHUB_RELEASES_REPOSITORY | | ✅ |
@@ -109,7 +110,8 @@ $feed = new MixedFeed([
         'page-id',
         'app_access_token',
         null, // you can add a doctrine cache provider
-        []    // And a fields array to retrieve too
+        [],    // And a fields array to retrieve too
+        null // A specific Graph API Endpoint URL
     ),
     new GithubCommitsFeed(
         'symfony/symfony',
@@ -187,7 +189,7 @@ method.
 | InstagramFeed | Call over `/v1/users/$userId/media/recent/` endpoint. It needs a `$userId` and an `$accessToken` | `instagram` |
 | TwitterFeed | Call over `statuses/user_timeline` endpoint. It requires a `$userId`, a `$consumerKey`, a `$consumerSecret`, an `$accessToken` and an `$accessTokenSecret`. Be careful, this [endpoint](https://dev.twitter.com/rest/reference/get/statuses/user_timeline) can **only return up to 3,200 of a user’s most recent Tweets**, your item count could be lesser than expected. In the same way, Twitter removes retweets after retrieving the items count. | `twitter` |
 | TwitterSearchFeed | Call over `search/tweets` endpoint. It requires a `$queryParams` array, a `$consumerKey`, a `$consumerSecret`, an `$accessToken` and an `$accessTokenSecret`. Be careful, Twitter API **won’t retrieve tweets older than 7 days**, your item count could be lesser than expected. `$queryParams` must be a *key-valued* array with *query operators* according to [Twitter API documentation](https://dev.twitter.com/rest/public/search). | `twitter` |
-| FacebookPageFeed | Call over `https://graph.facebook.com/$pageId/posts` endpoint. It requires a `$pageId` and an `$accessToken`. This feed provider only works for public Facebook **pages**. To get an access-token visit: https://developers.facebook.com/docs/facebook-login/access-tokens. By default, `link`, `picture`, `message`, `story`, `type`, `created_time`, `source`, `status_type` fields are queried, you can add your own by passing `$field` array as last parameter. You can add `since` and `until` query parameters using `setSince(\Datetime)` and `setUntil(\Datetime)` methods. | `facebook_page` |
+| FacebookPageFeed | Call over `https://graph.facebook.com/v2.12/$pageId/posts` endpoint by default. Endpoint can be changed using `$apiBaseUrl` parameter. It requires a `$pageId` and an `$accessToken`. This feed provider only works for public Facebook **pages**. To get an access-token visit: https://developers.facebook.com/docs/facebook-login/access-tokens. By default, `link`, `picture`, `message`, `story`, `type`, `created_time`, `source`, `status_type` fields are queried, you can add your own by passing `$field` array as last parameter. You can add `since` and `until` query parameters using `setSince(\Datetime)` and `setUntil(\Datetime)` methods. You can overwrite the default | `facebook_page` |
 | PinterestBoardFeed | Call over `/v1/boards/$boardId/pins/` endpoint. It requires a `$boardId` and an `$accessToken`. To get an access-token visit: https://developers.pinterest.com/tools/access_token/ | `pinterest_board` |
 | GithubReleasesFeed | Call over `api.github.com/repos/:user/:repo/releases` endpoint. It requires a `$repository` (*user/repository*) and an `$accessToken`. You can add a last `$page` parameter. To get an access-token visit: https://github.com/settings/tokens | `github_release` |
 | GithubCommitsFeed | Call over `api.github.com/repos/:user/:repo/commits` endpoint. It requires a `$repository` (*user/repository*) and an `$accessToken`. You can add a last `$page` parameter. To get an access-token visit: https://github.com/settings/tokens | `github_commit` |

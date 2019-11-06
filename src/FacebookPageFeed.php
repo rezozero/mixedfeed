@@ -41,6 +41,9 @@ class FacebookPageFeed extends AbstractFeedProvider
     protected $pageId;
     protected $accessToken;
     protected $fields;
+
+    protected $apiBaseUrl = 'https://graph.facebook.com/v2.12/';
+
     /**
      * @var \DateTime|null
      */
@@ -54,23 +57,27 @@ class FacebookPageFeed extends AbstractFeedProvider
 
     /**
      *
-     * @param string $pageId
-     * @param string $accessToken Your App Token
+     * @param string             $pageId
+     * @param string             $accessToken Your App Token
      * @param CacheProvider|null $cacheProvider
-     * @param array $fields
+     * @param array              $fields
+     * @param string|null        $apiBaseUrl
+     *
      * @throws CredentialsException
      */
     public function __construct(
         $pageId,
         $accessToken,
         CacheProvider $cacheProvider = null,
-        $fields = []
+        $fields = [],
+        $apiBaseUrl = null
     ) {
         parent::__construct($cacheProvider);
         $this->pageId = $pageId;
         $this->accessToken = $accessToken;
         $this->fields = ['from', 'link', 'picture', 'full_picture', 'message', 'story', 'type', 'created_time', 'source', 'status_type'];
         $this->fields = array_unique(array_merge($this->fields, $fields));
+        $this->apiBaseUrl = $apiBaseUrl ?: $this->apiBaseUrl;
 
         if (null === $this->accessToken ||
             false === $this->accessToken ||
@@ -108,7 +115,7 @@ class FacebookPageFeed extends AbstractFeedProvider
         $value = http_build_query($params, null, '&', PHP_QUERY_RFC3986);
         yield new Request(
             'GET',
-            'https://graph.facebook.com/' . $this->pageId . '/posts?'.$value
+            $this->apiBaseUrl . $this->pageId . '/posts?'.$value
         );
     }
 
