@@ -6,6 +6,7 @@ use RZ\MixedFeed\FacebookPageFeed;
 use RZ\MixedFeed\FeedProviderInterface;
 use RZ\MixedFeed\GithubCommitsFeed;
 use RZ\MixedFeed\GithubReleasesFeed;
+use RZ\MixedFeed\GraphInstagramFeed;
 use RZ\MixedFeed\InstagramFeed;
 use RZ\MixedFeed\InstagramOEmbedFeed;
 use RZ\MixedFeed\MediumFeed;
@@ -19,6 +20,7 @@ class ProviderResolver
      * @param CacheProvider|null $cache
      *
      * @return FeedProviderInterface[]
+     * @throws \RZ\MixedFeed\Exception\CredentialsException
      */
     public static function parseFromEnvironment(CacheProvider $cache = null)
     {
@@ -47,6 +49,24 @@ class ProviderResolver
                     $cache
                 );
                 array_push($feedProviders, $instagramProvider);
+            }
+        }
+        /*
+         * Graph instagram
+         */
+        if (false !== $instagramUserIds = getenv('MF_GRAPH_INSTAGRAM_USER_ID') &&
+                false !== $instagramAccessTokens = getenv('MF_GRAPH_INSTAGRAM_ACCESS_TOKEN')) {
+            $instagramUserIds = explode(',', $instagramUserIds);
+            $instagramAccessTokens = explode(',', $instagramAccessTokens);
+            foreach ($instagramUserIds as $i => $instagramUserId) {
+                if (isset($instagramAccessTokens[$i])) {
+                    $instagramProvider = new GraphInstagramFeed(
+                        $instagramUserId,
+                        $instagramAccessTokens[$i],
+                        $cache
+                    );
+                    array_push($feedProviders, $instagramProvider);
+                }
             }
         }
         if (false !== $instagramOEmbedId = getenv('MF_INSTAGRAM_OEMBED_ID')) {

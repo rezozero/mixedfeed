@@ -42,6 +42,8 @@ docker run -p 8080:80 \
 | MF_FACEBOOK_ENDPOINT | https://graph.facebook.com/v2.12/ | |
 | MF_INSTAGRAM_USER_ID | | ✅ |
 | MF_INSTAGRAM_ACCESS_TOKEN | | |
+| MF_GRAPH_INSTAGRAM_USER_ID | | ✅ |
+| MF_GRAPH_INSTAGRAM_ACCESS_TOKEN | | ✅ |
 | MF_GITHUB_RELEASES_REPOSITORY | | ✅ |
 | MF_GITHUB_COMMITS_REPOSITORY | | ✅ |
 | MF_GITHUB_ACCESS_TOKEN | | |
@@ -68,7 +70,7 @@ composer require rezozero/mixedfeed
 
 ```php
 use RZ\MixedFeed\MixedFeed;
-use RZ\MixedFeed\InstagramFeed;
+use RZ\MixedFeed\GraphInstagramFeed;
 use RZ\MixedFeed\TwitterFeed;
 use RZ\MixedFeed\TwitterSearchFeed;
 use RZ\MixedFeed\FacebookPageFeed;
@@ -76,10 +78,11 @@ use RZ\MixedFeed\GithubReleasesFeed;
 use RZ\MixedFeed\GithubCommitsFeed;
 
 $feed = new MixedFeed([
-    new InstagramFeed(
+    new GraphInstagramFeed(
         'instagram_user_id',
         'instagram_access_token',
-        null // you can add a doctrine cache provider
+        null ,// you can add a doctrine cache provider
+        [] // And a fields array to retrieve too
     ),
     new TwitterFeed(
         'twitter_user_id',
@@ -186,7 +189,8 @@ method.
 | -------------- | ---------------- | ------------------ |
 | MediumFeed | Call over `https://medium.com/username/latest` endpoint. It only needs a `$username` and an optional `$userId` for better consistency over requests (Medium seems to apply cache on their username requests even after changing a query parameter, i.e. post limit). *Medium* allows maximum 14 posts per requests. | `medium` |
 | InstagramOEmbedFeed | Call over `https://api.instagram.com/oembed/` endpoint. It only needs a `$embedUrls` array | `instagram_oembed` |
-| InstagramFeed | Call over `/v1/users/$userId/media/recent/` endpoint. It needs a `$userId` and an `$accessToken` | `instagram` |
+| GraphInstagramFeed | Call over `graph.instagram.com/$userId/media` endpoint with [Basic Display API](https://developers.facebook.com/docs/instagram-basic-display-api). It needs a `$userId` and an `$accessToken`. **Warning**: Access token must be refreshed every 60 days, use `RefreshInstagramAccessToken` | `instagram` |
+| InstagramFeed | *Deprecated*: Call over `/v1/users/$userId/media/recent/` endpoint. It needs a `$userId` and an `$accessToken` | `instagram` |
 | TwitterFeed | Call over `statuses/user_timeline` endpoint. It requires a `$userId`, a `$consumerKey`, a `$consumerSecret`, an `$accessToken` and an `$accessTokenSecret`. Be careful, this [endpoint](https://dev.twitter.com/rest/reference/get/statuses/user_timeline) can **only return up to 3,200 of a user’s most recent Tweets**, your item count could be lesser than expected. In the same way, Twitter removes retweets after retrieving the items count. | `twitter` |
 | TwitterSearchFeed | Call over `search/tweets` endpoint. It requires a `$queryParams` array, a `$consumerKey`, a `$consumerSecret`, an `$accessToken` and an `$accessTokenSecret`. Be careful, Twitter API **won’t retrieve tweets older than 7 days**, your item count could be lesser than expected. `$queryParams` must be a *key-valued* array with *query operators* according to [Twitter API documentation](https://dev.twitter.com/rest/public/search). | `twitter` |
 | FacebookPageFeed | Call over `https://graph.facebook.com/v2.12/$pageId/posts` endpoint by default. Endpoint can be changed using `$apiBaseUrl` parameter. It requires a `$pageId` and an `$accessToken`. This feed provider only works for public Facebook **pages**. To get an access-token visit: https://developers.facebook.com/docs/facebook-login/access-tokens. By default, `link`, `picture`, `message`, `story`, `type`, `created_time`, `source`, `status_type` fields are queried, you can add your own by passing `$field` array as last parameter. You can add `since` and `until` query parameters using `setSince(\Datetime)` and `setUntil(\Datetime)` methods. You can overwrite the default | `facebook_page` |
