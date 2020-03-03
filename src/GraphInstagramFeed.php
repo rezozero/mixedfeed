@@ -76,7 +76,9 @@ class GraphInstagramFeed extends AbstractFeedProvider
                 'media_url',
                 'thumbnail_url',
                 'timestamp',
-                'permalink'
+                'permalink',
+                'like_count',
+                'comments_count',
             ];
         }
 
@@ -165,6 +167,13 @@ class GraphInstagramFeed extends AbstractFeedProvider
         $feedItem->setId($item->id);
         $feedItem->setAuthor($item->username);
         $feedItem->setLink($item->permalink);
+        if (isset($item->like_count)) {
+            $feedItem->setLikeCount($item->like_count);
+        }
+        if (isset($item->comments_count)) {
+            $feedItem->setShareCount($item->comments_count);
+        }
+
         $feedItemImage = new Image();
         $feedItemImage->setUrl($item->media_url);
         $feedItem->addImage($feedItemImage);

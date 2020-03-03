@@ -255,7 +255,7 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
         if (count($this->errors) > 0) {
             throw new FeedProviderErrorException($this->getFeedPlatform(), implode(', ', $this->errors));
         }
-        return is_iterable($feed);
+        return is_iterable($feed->items);
     }
 
     /**

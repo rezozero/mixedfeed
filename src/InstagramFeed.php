@@ -143,6 +143,9 @@ class InstagramFeed extends AbstractFeedProvider
         $feedItem->setId($item->id);
         $feedItem->setAuthor($item->user->full_name);
         $feedItem->setLink($item->link);
+        if (isset($item->like_count)) {
+            $feedItem->setLikeCount($item->like_count);
+        }
         $feedItemImage = new Image();
         $feedItemImage->setUrl($item->images->standard_resolution->url);
         $feedItemImage->setWidth($item->images->standard_resolution->width);

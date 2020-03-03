@@ -13,6 +13,7 @@ use RZ\MixedFeed\MediumFeed;
 use RZ\MixedFeed\PinterestBoardFeed;
 use RZ\MixedFeed\TwitterFeed;
 use RZ\MixedFeed\TwitterSearchFeed;
+use RZ\MixedFeed\YoutubePlaylistItemFeed;
 
 class ProviderResolver
 {
@@ -40,6 +41,23 @@ class ProviderResolver
                 array_push($feedProviders, $facebookProvider);
             }
         }
+        /*
+         * Youtube playlist
+         */
+        if (false !== $youtubePlaylistIds = getenv('MF_YOUTUBE_PLAYLIST_ID')) {
+            $youtubePlaylistIds = explode(',', $youtubePlaylistIds);
+            foreach ($youtubePlaylistIds as $youtubePlaylistId) {
+                $youtubePlaylistProvider = new YoutubePlaylistItemFeed(
+                    $youtubePlaylistId,
+                    getenv('MF_YOUTUBE_API_KEY'),
+                    $cache
+                );
+                array_push($feedProviders, $youtubePlaylistProvider);
+            }
+        }
+        /*
+         * Former Instagram API
+         */
         if (false !== $instagramUserIds = getenv('MF_INSTAGRAM_USER_ID')) {
             $instagramUserIds = explode(',', $instagramUserIds);
             foreach ($instagramUserIds as $instagramUserId) {

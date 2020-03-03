@@ -75,7 +75,18 @@ class FacebookPageFeed extends AbstractFeedProvider
         parent::__construct($cacheProvider);
         $this->pageId = $pageId;
         $this->accessToken = $accessToken;
-        $this->fields = ['from', 'link', 'picture', 'full_picture', 'message', 'story', 'type', 'created_time', 'source', 'status_type'];
+        $this->fields = [
+            'from',
+            'link',
+            'picture',
+            'full_picture',
+            'message',
+            'story',
+            'type',
+            'created_time',
+            'source',
+            'status_type'
+        ];
         $this->fields = array_unique(array_merge($this->fields, $fields));
         $this->apiBaseUrl = $apiBaseUrl ?: $this->apiBaseUrl;
 

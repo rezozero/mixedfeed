@@ -185,6 +185,21 @@ abstract class AbstractTwitterFeed extends BaseFeedProvider
             $feedItem->setLink($item->entities->urls[0]->expanded_url);
         }
 
+        if (isset($item->retweet_count)) {
+            $feedItem->setShareCount($item->retweet_count);
+        }
+        if (isset($item->favorite_count)) {
+            $feedItem->setLikeCount($item->favorite_count);
+        }
+
+        if (isset($item->entities->hashtags)) {
+            foreach ($item->entities->hashtags as $hashtag) {
+                $feedItem->setTags(array_merge($feedItem->getTags(), [
+                    $hashtag->text
+                ]));
+            }
+        }
+
         if (isset($item->entities->media)) {
             foreach ($item->entities->media as $media) {
                 $feedItemImage = new Image();

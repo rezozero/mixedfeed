@@ -48,15 +48,17 @@ class TwitterFeed extends AbstractTwitterFeed
     protected $extended;
 
     /**
-     * @param string $userId
-     * @param string $consumerKey
-     * @param string $consumerSecret
-     * @param string $accessToken
-     * @param string $accessTokenSecret
+     * @param string             $userId
+     * @param string             $consumerKey
+     * @param string             $consumerSecret
+     * @param string             $accessToken
+     * @param string             $accessTokenSecret
      * @param CacheProvider|null $cacheProvider
-     * @param boolean $excludeReplies
-     * @param boolean $includeRts
-     * @param bool $extended
+     * @param boolean            $excludeReplies
+     * @param boolean            $includeRts
+     * @param bool               $extended
+     *
+     * @throws Exception\CredentialsException
      */
     public function __construct(
         $userId,
@@ -67,7 +69,7 @@ class TwitterFeed extends AbstractTwitterFeed
         CacheProvider $cacheProvider = null,
         $excludeReplies = true,
         $includeRts = false,
-        $extended = false
+        $extended = true
     ) {
 
         parent::__construct(
