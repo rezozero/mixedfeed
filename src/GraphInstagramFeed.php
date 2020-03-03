@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © 2015, Ambroise Maupate
+ * Copyright © 2020, Ambroise Maupate
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,34 +33,59 @@ use RZ\MixedFeed\Exception\CredentialsException;
 use RZ\MixedFeed\Exception\FeedProviderErrorException;
 
 /**
- * Get an Instagram user feed.
- * @deprecated Use GraphInstragramFeed to comply with new Facebook API policy
+ * Get an Instagram user feed from Facebook Graph API
  */
-class InstagramFeed extends AbstractFeedProvider
+class GraphInstagramFeed extends AbstractFeedProvider
 {
+    /**
+     * @var string
+     */
     protected $userId;
+    /**
+     * @var string
+     */
     protected $accessToken;
-    protected static $timeKey = 'created_time';
+    /**
+     * @var array
+     */
+    private $fields;
 
     /**
-     * InstagramFeed constructor.
+     * GraphInstagramFeed constructor.
      *
-     * @param string $userId
-     * @param string $accessToken
+     * @param string             $userId
+     * @param string             $accessToken
      * @param CacheProvider|null $cacheProvider
+     * @param array              $fields
      *
      * @throws CredentialsException
      */
-    public function __construct($userId, $accessToken, CacheProvider $cacheProvider = null)
+    public function __construct($userId, $accessToken, CacheProvider $cacheProvider = null, array $fields = [])
     {
         parent::__construct($cacheProvider);
         $this->userId = $userId;
         $this->accessToken = $accessToken;
+        if (count($fields) > 0) {
+            $this->fields = $fields;
+        } else {
+            $this->fields = [
+                'id',
+                'username',
+                'caption',
+                'media_type',
+                'media_url',
+                'thumbnail_url',
+                'timestamp',
+                'permalink',
+                'like_count',
+                'comments_count',
+            ];
+        }
 
         if (null === $this->accessToken ||
             false === $this->accessToken ||
             empty($this->accessToken)) {
-            throw new CredentialsException("InstagramFeed needs a valid access token.", 1);
+            throw new CredentialsException("GraphInstagramFeed needs a valid access token.", 1);
         }
     }
 
@@ -75,12 +100,13 @@ class InstagramFeed extends AbstractFeedProvider
     public function getRequests($count = 5): \Generator
     {
         $value = http_build_query([
+            'fields' => implode(',', $this->fields),
             'access_token' => $this->accessToken,
-            'count' => $count,
+            'limit' => $count,
         ], null, '&', PHP_QUERY_RFC3986);
         yield new Request(
             'GET',
-            'https://api.instagram.com/v1/users/' . $this->userId . '/media/recent/?'.$value
+            'https://graph.instagram.com/' . $this->userId . '/media?'.$value
         );
     }
 
@@ -109,9 +135,7 @@ class InstagramFeed extends AbstractFeedProvider
      */
     public function getDateTime($item)
     {
-        $date = new \DateTime();
-        $date->setTimestamp($item->created_time);
-        return $date;
+        return new \DateTime($item->timestamp);
     }
 
     /**
@@ -120,7 +144,7 @@ class InstagramFeed extends AbstractFeedProvider
     public function getCanonicalMessage($item)
     {
         if (null !== $item->caption) {
-            return $item->caption->text;
+            return $item->caption;
         }
 
         return "";
@@ -141,15 +165,17 @@ class InstagramFeed extends AbstractFeedProvider
     {
         $feedItem = parent::createFeedItemFromObject($item);
         $feedItem->setId($item->id);
-        $feedItem->setAuthor($item->user->full_name);
-        $feedItem->setLink($item->link);
+        $feedItem->setAuthor($item->username);
+        $feedItem->setLink($item->permalink);
         if (isset($item->like_count)) {
             $feedItem->setLikeCount($item->like_count);
         }
+        if (isset($item->comments_count)) {
+            $feedItem->setShareCount($item->comments_count);
+        }
+
         $feedItemImage = new Image();
-        $feedItemImage->setUrl($item->images->standard_resolution->url);
-        $feedItemImage->setWidth($item->images->standard_resolution->width);
-        $feedItemImage->setHeight($item->images->standard_resolution->height);
+        $feedItemImage->setUrl($item->media_url);
         $feedItem->addImage($feedItemImage);
         return $feedItem;
     }

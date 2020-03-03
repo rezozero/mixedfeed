@@ -59,13 +59,15 @@ class TwitterSearchFeed extends AbstractTwitterFeed
 
     /**
      *
-     * @param array $queryParams
-     * @param string $consumerKey
-     * @param string $consumerSecret
-     * @param string $accessToken
-     * @param string $accessTokenSecret
+     * @param array              $queryParams
+     * @param string             $consumerKey
+     * @param string             $consumerSecret
+     * @param string             $accessToken
+     * @param string             $accessTokenSecret
      * @param CacheProvider|null $cacheProvider
-     * @param bool $extended
+     * @param bool               $extended
+     *
+     * @throws Exception\CredentialsException
      */
     public function __construct(
         array $queryParams,
@@ -74,7 +76,7 @@ class TwitterSearchFeed extends AbstractTwitterFeed
         $accessToken,
         $accessTokenSecret,
         CacheProvider $cacheProvider = null,
-        $extended = false
+        $extended = true
     ) {
         parent::__construct(
             $consumerKey,

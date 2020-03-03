@@ -48,6 +48,18 @@ class FeedItem
     protected $tags = [];
 
     /**
+     * @var int|null
+     */
+    protected $likeCount;
+
+    /**
+     * Share, comments or retweet count depending on platform.
+     *
+     * @var int|null
+     */
+    protected $shareCount;
+
+    /**
      * @return string
      */
     public function getId()
@@ -234,6 +246,46 @@ class FeedItem
     public function setTags(array $tags)
     {
         $this->tags = $tags;
+
+        return $this;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getLikeCount(): ?int
+    {
+        return $this->likeCount;
+    }
+
+    /**
+     * @param int $likeCount
+     *
+     * @return FeedItem
+     */
+    public function setLikeCount(int $likeCount)
+    {
+        $this->likeCount = $likeCount;
+
+        return $this;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getShareCount(): ?int
+    {
+        return $this->shareCount;
+    }
+
+    /**
+     * @param int $shareCount
+     *
+     * @return FeedItem
+     */
+    public function setShareCount(int $shareCount)
+    {
+        $this->shareCount = $shareCount;
 
         return $this;
     }
