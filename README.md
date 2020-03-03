@@ -128,6 +128,11 @@ $feed = new MixedFeed([
         'access_token',
         null // you can add a doctrine cache provider
     ),
+    new \RZ\MixedFeed\YoutubePlaylistItemFeed(
+        'your_playlist_id',
+        'api_key',
+        null // you can add a doctrine cache provider
+    ),
 ]);
 
 return $feed->getItems(12);
