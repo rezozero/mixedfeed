@@ -51,7 +51,7 @@ abstract class AbstractYoutubeVideoFeed extends AbstractFeedProvider
         if (isset($item->snippet->publishedAt)) {
             return new \DateTime($item->snippet->publishedAt);
         }
-        return null;https://klepierre.rezo-zero.dev/
+        return null;
     }
 
     /**
