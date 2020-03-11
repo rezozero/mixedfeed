@@ -85,7 +85,7 @@ interface FeedProviderInterface
      * Check if the feed provider has succeded to
      * contact API.
      *
-     * @param $feed
+     * @param mixed $feed
      *
      * @return boolean
      */

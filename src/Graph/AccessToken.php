@@ -25,7 +25,7 @@ class AccessToken
      * @param string $tokenType
      * @param int    $expiresIn
      */
-    public function __construct(string $accessToken, string $tokenType = "", int $expiresIn = 0)
+    final public function __construct(string $accessToken, string $tokenType = "", int $expiresIn = 0)
     {
         $this->accessToken = $accessToken;
         $this->tokenType = $tokenType;

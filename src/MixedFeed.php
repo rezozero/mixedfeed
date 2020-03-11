@@ -247,7 +247,7 @@ class MixedFeed extends AbstractFeedProvider
         $client = new Client();
         $pool = new Pool($client, $requests, [
             'concurrency' => 6,
-            'fulfilled' => function ($response, $index) use (&$list, $perProviderCount) {
+            'fulfilled' => function ($response, $index) {
                 list($providerIdx, $i) = explode('.', $index);
                 $provider = $this->providers[$providerIdx];
                 if ($provider instanceof AbstractFeedProvider &&
