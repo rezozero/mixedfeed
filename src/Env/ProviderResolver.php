@@ -72,8 +72,9 @@ class ProviderResolver
         /*
          * Graph instagram
          */
-        if (false !== $instagramUserIds = getenv('MF_GRAPH_INSTAGRAM_USER_ID') &&
-                false !== $instagramAccessTokens = getenv('MF_GRAPH_INSTAGRAM_ACCESS_TOKEN')) {
+        $instagramUserIds = getenv('MF_GRAPH_INSTAGRAM_USER_ID');
+        $instagramAccessTokens = getenv('MF_GRAPH_INSTAGRAM_ACCESS_TOKEN');
+        if (false !== $instagramUserIds && false !== $instagramAccessTokens) {
             $instagramUserIds = explode(',', $instagramUserIds);
             $instagramAccessTokens = explode(',', $instagramAccessTokens);
             foreach ($instagramUserIds as $i => $instagramUserId) {

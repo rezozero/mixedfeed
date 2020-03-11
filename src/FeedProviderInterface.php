@@ -77,7 +77,7 @@ interface FeedProviderInterface
      * Get a \DateTime object from a social feed item.
      *
      * @param \stdClass $item
-     * @return \DateTime
+     * @return \DateTime|null
      */
     public function getDateTime($item);
 
@@ -85,7 +85,7 @@ interface FeedProviderInterface
      * Check if the feed provider has succeded to
      * contact API.
      *
-     * @param $feed
+     * @param mixed $feed
      *
      * @return boolean
      */

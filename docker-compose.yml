@@ -7,9 +7,8 @@ services:
       MF_FEED_LENGTH: 12
       # MF_FACEBOOK_PAGE_ID: ""
       # MF_FACEBOOK_ACCESS_TOKEN: ""
-      MF_FACEBOOK_FIELDS: "from,link,picture,full_picture,message,story,type,created_time,source,status_type"
-      #MF_FACEBOOK_ENDPOINT: "https://graph.facebook.com/v2.12/"
-
+      # MF_FACEBOOK_FIELDS: "from,picture,full_picture,message,story,created_time,status_type,message_tags,shares,permalink_url"
+      # MF_FACEBOOK_ENDPOINT: "https://graph.facebook.com/v2.12/"
       # MF_INSTAGRAM_USER_ID: ""
       # MF_INSTAGRAM_ACCESS_TOKEN: ""
 
@@ -31,7 +30,7 @@ services:
       # MF_TWITTER_ACCESS_TOKEN_SECRET: ""
       # MF_TWITTER_CONSUMER_KEY: ""
       # MF_TWITTER_CONSUMER_SECRET: ""
-      MF_TWITTER_EXTENDED_MODE: "0"
+      MF_TWITTER_EXTENDED_MODE: "1"
     ports:
       - 8080:80/tcp
     labels:

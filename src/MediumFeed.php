@@ -151,7 +151,7 @@ class MediumFeed extends AbstractFeedProvider
 
 
     /**
-     * @param $body
+     * @param object $body
      *
      * @return array
      * @throws \Exception

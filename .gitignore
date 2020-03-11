@@ -45,8 +45,11 @@ docker-compose.test.yml
 test.php
 /web/test.php
 /.env.dev
+/.env.local
+/.env.dev.local
 /docker-compose.dev.yml
 /.env.prod
+/.env.prod.local
 !/.env
 /cache
 /var/cache/*

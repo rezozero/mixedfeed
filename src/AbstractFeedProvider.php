@@ -46,7 +46,6 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
      * @var CacheProvider|null
      */
     protected $cacheProvider;
-
     /**
      * @var array
      */
@@ -261,7 +260,7 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
     /**
      * Get errors details.
      *
-     * @param $feed
+     * @param mixed $feed
      *
      * @return string
      * @deprecated Catch FeedProviderErrorException for errors details.

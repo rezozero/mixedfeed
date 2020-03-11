@@ -135,6 +135,7 @@ class TwitterSearchFeed extends AbstractTwitterFeed
                 $params['tweet_mode'] = 'extended';
             }
 
+            /** @var object $body */
             $body = $this->twitterConnection->get("search/tweets", $params);
 
             if (null !== $this->cacheProvider) {

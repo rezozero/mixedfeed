@@ -8,23 +8,20 @@ use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 if (PHP_VERSION_ID < 70200) {
-    echo 'Your PHP version is ' . phpversion() . "." . PHP_EOL;
-    echo 'You need a least PHP version 7.2.0';
-    exit(1);
+    $message = 'Your PHP version is ' . phpversion() . "." . PHP_EOL;
+    $message .= 'You need a least PHP version 7.2.0';
+    throw new \RuntimeException($message);
 }
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
-if (!isset($_SERVER['APP_ENV'])) {
-    (new Dotenv())->load(
-        dirname(__DIR__).'/.env',
-        dirname(__DIR__).'/.env.dev'
-    );
-}
+(new Dotenv())->loadEnv(dirname(__DIR__) .  '/.env');
+
 try {
     $sw = new Stopwatch();
     $sw->start('fetch');
     $feed = new MixedFeed(ProviderResolver::parseFromEnvironment(CacheResolver::parseFromEnvironment()));
+    header('Access-Control-Allow-Origin: *');
     header('Content-type: application/json');
     header('X-Generator: rezozero/mixedfeed');
     $serializer = SerializerBuilder::create()->build();

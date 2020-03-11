@@ -1,0 +1,15 @@
+language: php
+sudo: required
+php:
+    - 7.2
+    - 7.3
+    - 7.4
+
+install:
+    - curl -s http://getcomposer.org/installer | php
+    - php composer.phar install --dev --no-interaction
+
+script:
+    - vendor/bin/phpcs -p
+    - vendor/bin/phpstan analyse -l 2 ./src
+
