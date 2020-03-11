@@ -1,5 +1,4 @@
 <?php
-
 use Doctrine\Common\Cache\ArrayCache;
 use Doctrine\Common\Cache\FilesystemCache;
 use JMS\Serializer\SerializerBuilder;
@@ -7,9 +6,9 @@ use RZ\MixedFeed\Response\FeedItemResponse;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 if (PHP_VERSION_ID < 70200) {
-    echo 'Your PHP version is ' . phpversion() . "." . PHP_EOL;
-    echo 'You need a least PHP version 7.2.0';
-    exit(1);
+    $message = 'Your PHP version is ' . phpversion() . "." . PHP_EOL;
+    $message .= 'You need a least PHP version 7.2.0';
+    throw new \RuntimeException($message);
 }
 
 require dirname(__DIR__) . '/vendor/autoload.php';
@@ -23,6 +22,7 @@ $feed = new \RZ\MixedFeed\MixedFeed([
 $sw = new Stopwatch();
 $sw->start('fetch');
 header('Content-type: application/json');
+header('Access-Control-Allow-Origin: *');
 header('X-Generator: rezozero/mixedfeed');
 $serializer = SerializerBuilder::create()->build();
 $feedItems = $feed->getAsyncCanonicalItems(20);

@@ -77,7 +77,7 @@ interface FeedProviderInterface
      * Get a \DateTime object from a social feed item.
      *
      * @param \stdClass $item
-     * @return \DateTime
+     * @return \DateTime|null
      */
     public function getDateTime($item);
 
