@@ -149,6 +149,18 @@ class InstagramOEmbedFeed extends AbstractFeedProvider
     /**
      * {@inheritdoc}
      */
+    public function isValid($feed)
+    {
+        if (count($this->errors) > 0) {
+            throw new FeedProviderErrorException($this->getFeedPlatform(), implode(', ', $this->errors));
+        }
+        // OEmbed response is not iterable because there is only one item
+        return null !== $feed;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getDateTime($item)
     {
         if (false !== preg_match("#datetime=\\\"([^\"]+)\\\"#", $item->html, $matches)) {
