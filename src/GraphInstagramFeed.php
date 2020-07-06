@@ -37,6 +37,10 @@ use RZ\MixedFeed\Exception\FeedProviderErrorException;
  */
 class GraphInstagramFeed extends AbstractFeedProvider
 {
+    const TYPE_IMAGE = 'IMAGE';
+    const TYPE_VIDEO = 'VIDEO';
+    const TYPE_CAROUSEL_ALBUM = 'CAROUSEL_ALBUM';
+
     /**
      * @var string
      */
@@ -174,9 +178,16 @@ class GraphInstagramFeed extends AbstractFeedProvider
             $feedItem->setShareCount($item->comments_count);
         }
 
-        $feedItemImage = new Image();
-        $feedItemImage->setUrl($item->media_url);
-        $feedItem->addImage($feedItemImage);
+        if ($item->media_type === static::TYPE_VIDEO && !empty($item->thumbnail_url)) {
+            $feedItemImage = new Image();
+            $feedItemImage->setUrl($item->thumbnail_url);
+            $feedItem->addImage($feedItemImage);
+        } else {
+            $feedItemImage = new Image();
+            $feedItemImage->setUrl($item->media_url);
+            $feedItem->addImage($feedItemImage);
+        }
+
         return $feedItem;
     }
 }
