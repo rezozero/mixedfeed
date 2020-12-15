@@ -77,7 +77,7 @@ class InstagramFeed extends AbstractFeedProvider
         $value = http_build_query([
             'access_token' => $this->accessToken,
             'count' => $count,
-        ], null, '&', PHP_QUERY_RFC3986);
+        ], '', '&', PHP_QUERY_RFC3986);
         yield new Request(
             'GET',
             'https://api.instagram.com/v1/users/' . $this->userId . '/media/recent/?'.$value

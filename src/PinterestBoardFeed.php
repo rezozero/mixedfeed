@@ -80,7 +80,7 @@ class PinterestBoardFeed extends AbstractFeedProvider
             'access_token' => $this->accessToken,
             'limit' => $count,
             'fields' => 'id,color,created_at,creator,media,image[original],note,link,url',
-        ], null, '&', PHP_QUERY_RFC3986);
+        ], '', '&', PHP_QUERY_RFC3986);
         yield new Request(
             'GET',
             'https://api.pinterest.com/v1/boards/' . $this->boardId . '/pins?'.$value

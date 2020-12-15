@@ -47,7 +47,7 @@ class InstagramOEmbedFeed extends AbstractFeedProvider
         foreach ($this->embedUrls as $embedUrl) {
             $value = http_build_query([
                 'url' => $embedUrl,
-            ], null, '&', PHP_QUERY_RFC3986);
+            ], '', '&', PHP_QUERY_RFC3986);
             yield new Request(
                 'GET',
                 'https://api.instagram.com/oembed?'.$value

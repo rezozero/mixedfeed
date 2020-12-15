@@ -123,7 +123,7 @@ class FacebookPageFeed extends AbstractFeedProvider
             $this->until instanceof \Datetime) {
             $params['until'] = $this->until->getTimestamp();
         }
-        $value = http_build_query($params, null, '&', PHP_QUERY_RFC3986);
+        $value = http_build_query($params, '', '&', PHP_QUERY_RFC3986);
         yield new Request(
             'GET',
             $this->apiBaseUrl . $this->pageId . '/posts?'.$value

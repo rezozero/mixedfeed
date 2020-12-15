@@ -70,7 +70,7 @@ class GithubReleasesFeed extends AbstractFeedProvider
             'per_page' => $count,
             'token_type' => 'bearer',
             'page' => $this->page,
-        ], null, '&', PHP_QUERY_RFC3986);
+        ], '', '&', PHP_QUERY_RFC3986);
         yield new Request(
             'GET',
             'https://api.github.com/repos/' . $this->repository . '/releases?'.$value

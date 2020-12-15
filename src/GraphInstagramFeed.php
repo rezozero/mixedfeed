@@ -107,7 +107,7 @@ class GraphInstagramFeed extends AbstractFeedProvider
             'fields' => implode(',', $this->fields),
             'access_token' => $this->accessToken,
             'limit' => $count,
-        ], null, '&', PHP_QUERY_RFC3986);
+        ], '', '&', PHP_QUERY_RFC3986);
         yield new Request(
             'GET',
             'https://graph.instagram.com/' . $this->userId . '/media?'.$value

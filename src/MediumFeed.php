@@ -73,7 +73,7 @@ class MediumFeed extends AbstractFeedProvider
             'limit' => $count,
             'collectionId' => null,
             'source' => 'latest',
-        ], null, '&', PHP_QUERY_RFC3986);
+        ], '', '&', PHP_QUERY_RFC3986);
         yield new Request(
             'GET',
             $this->url . '?' . $value
