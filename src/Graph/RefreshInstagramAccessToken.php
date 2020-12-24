@@ -21,8 +21,6 @@ final class RefreshInstagramAccessToken
     private static $grantType = 'ig_refresh_token';
 
     /**
-     * RefreshInstagramAccessToken constructor.
-     *
      * @param string $accessToken
      */
     public function __construct(string $accessToken)

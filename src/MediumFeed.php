@@ -1,5 +1,4 @@
 <?php
-
 namespace RZ\MixedFeed;
 
 use Doctrine\Common\Cache\CacheProvider;
@@ -34,10 +33,8 @@ class MediumFeed extends AbstractFeedProvider
     private $useLatestPublicationDate = false;
 
     /**
-     * MediumFeed constructor.
-     *
      * @param string        $username
-     * @param CacheProvider $cacheProvider
+     * @param CacheProvider|null $cacheProvider
      * @param null          $userId
      */
     public function __construct($username, CacheProvider $cacheProvider = null, $userId = null)
