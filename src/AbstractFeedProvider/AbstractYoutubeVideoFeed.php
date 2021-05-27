@@ -11,11 +11,12 @@ use RZ\MixedFeed\Exception\CredentialsException;
 
 abstract class AbstractYoutubeVideoFeed extends AbstractFeedProvider
 {
+    /**
+     * @var string
+     */
     protected $apiKey;
 
     /**
-     * YoutubeVideoFeed constructor.
-     *
      * @param string             $apiKey
      * @param CacheProvider|null $cacheProvider
      *

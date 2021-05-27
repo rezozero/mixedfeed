@@ -1,5 +1,4 @@
 <?php
-
 namespace RZ\MixedFeed\Response;
 
 class FeedItemResponse
@@ -15,8 +14,6 @@ class FeedItemResponse
     protected $meta;
 
     /**
-     * FeedItemResponse constructor.
-     *
      * @param array $feedItems
      * @param array $meta
      */

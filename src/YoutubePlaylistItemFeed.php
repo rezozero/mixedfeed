@@ -16,8 +16,6 @@ class YoutubePlaylistItemFeed extends AbstractYoutubeVideoFeed
     protected $playlistId;
 
     /**
-     * YoutubePlaylistItemFeed constructor.
-     *
      * @param string             $playlistId
      * @param string             $apiKey
      * @param CacheProvider|null $cacheProvider

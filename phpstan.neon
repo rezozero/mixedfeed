@@ -1,0 +1,12 @@
+parameters:
+    level: 3
+    paths:
+        - src
+    excludes_analyse:
+        - */node_modules/*
+        - */bower_components/*
+        - */static/*
+    reportUnmatchedIgnoredErrors: false
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
+    treatPhpDocTypesAsCertain: false

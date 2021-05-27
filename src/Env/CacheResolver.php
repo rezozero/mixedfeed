@@ -1,6 +1,4 @@
 <?php
-
-
 namespace RZ\MixedFeed\Env;
 
 use Doctrine\Common\Cache\ApcuCache;

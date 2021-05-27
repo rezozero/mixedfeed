@@ -4,12 +4,15 @@ php:
     - 7.2
     - 7.3
     - 7.4
-
+    - 8.0
+    - nightly
+jobs:
+    allow_failures:
+        -   php: nightly
 install:
     - curl -s http://getcomposer.org/installer | php
     - php composer.phar install --dev --no-interaction
-
 script:
     - vendor/bin/phpcs -p
-    - vendor/bin/phpstan analyse -l 2 ./src
+    - vendor/bin/phpstan analyse -c phpstan.neon
 

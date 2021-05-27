@@ -1,11 +1,4 @@
 <?php
-/**
- * mixedfeed - FeedItem.php
- *
- * Initial version by: ambroisemaupate
- * Initial version created on: 2019-02-12
- */
-
 namespace RZ\MixedFeed\Canonical;
 
 class FeedItem
@@ -46,7 +39,6 @@ class FeedItem
      * @var array
      */
     protected $tags = [];
-
     /**
      * @var int|null
      */

@@ -1,5 +1,4 @@
 <?php
-
 namespace RZ\MixedFeed;
 
 use Doctrine\Common\Cache\CacheProvider;

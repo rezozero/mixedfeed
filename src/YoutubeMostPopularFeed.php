@@ -1,5 +1,4 @@
 <?php
-
 namespace RZ\MixedFeed;
 
 use GuzzleHttp\Psr7\Request;

@@ -19,8 +19,6 @@ class AccessToken
     protected $expiresIn = 0;
 
     /**
-     * AccessToken constructor.
-     *
      * @param string $accessToken
      * @param string $tokenType
      * @param int    $expiresIn
