@@ -1,4 +1,7 @@
 parameters:
+    level: 3
+    paths:
+        - src
     excludes_analyse:
         - */node_modules/*
         - */bower_components/*

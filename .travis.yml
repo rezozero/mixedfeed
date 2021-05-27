@@ -8,12 +8,11 @@ php:
     - nightly
 jobs:
     allow_failures:
-        -   php: 8.0
         -   php: nightly
 install:
     - curl -s http://getcomposer.org/installer | php
     - php composer.phar install --dev --no-interaction
 script:
     - vendor/bin/phpcs -p
-    - vendor/bin/phpstan analyse -c phpstan.neon -l 3 ./src
+    - vendor/bin/phpstan analyse -c phpstan.neon
 
