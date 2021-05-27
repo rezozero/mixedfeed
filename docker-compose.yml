@@ -35,10 +35,13 @@ services:
       - 8080:80/tcp
     labels:
       - "traefik.enable=true"
-      - "traefik.port=80"
-      - "traefik.frontend.rule=Host:mixedfeed.test"
-      - "traefik.frontend.passHostHeader=true"
-      - "traefik.backend=example"
+      - "traefik.http.services.mixedfeed.loadbalancer.server.scheme=http"
+      - "traefik.http.services.mixedfeed.loadbalancer.server.port=80"
+      - "traefik.http.services.mixedfeed.loadbalancer.passhostheader=true"
+      # Listen HTTP
+      - "traefik.http.routers.mixedfeed.entrypoints=http"
+      - "traefik.http.routers.mixedfeed.rule=Host(`mixedfeed.test`)"
+      - "traefik.http.routers.mixedfeed.service=mixedfeed"
     networks:
       - default
       - frontproxynet
