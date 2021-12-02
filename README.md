@@ -145,7 +145,7 @@ return $feed->getAsyncCanonicalItems(12);
 
 ## Combine feeds
 
-*mixedfeed* can combine multiple social feeds so you can loop over them and use some common data fields such as `feedItemPlatform`, `normalizedDate` and `canonicalMessage`. *mixedfeed* will sort all your feed items by *descending* `normalizedDate`, but you can configure it to sort *ascending*: 
+*mixedfeed* can combine multiple social feeds so you can loop over them and use some common data fields such as `feedItemPlatform`, `normalizedDate` and `canonicalMessage`. *mixedfeed* will sort all your feed items by *descending* `normalizedDate`, but you can configure it to sort *ascending*:
 
 ```php
 new MixedFeed([…], MixedFeed::ASC);
@@ -181,9 +181,9 @@ object with essential data: `RZ\MixedFeed\Canonical\FeedItem`. *FeedItem* will p
 - likeCount `int|null`
 - shareCount `int|null`: Share, comments or retweet count depending on platform.
 - images `Image[]`
-    - url `string` 
-    - width `integer` 
-    - height `integer` 
+    - url `string`
+    - width `integer`
+    - height `integer`
 - dateTime `DateTime`
 - tags `array` (only used with `MediumFeed`)
 
@@ -221,12 +221,12 @@ There are plenty of APIs on the internet, and this tool won’t be able to handl
 But this is not a problem, you can easily create your own feed provider in *mixedfeed*. You just have to create a new *class* that
 will inherit from `RZ\MixedFeed\AbstractFeedProvider`. Then you will have to implement some methods from `FeedProviderInterface`:
 
-* `getRequests($count = 5): \Generator` method which return a *Guzzle* `Request` generator to be transformed to a response. This is 
+* `getRequests($count = 5): \Generator` method which return a *Guzzle* `Request` generator to be transformed to a response. This is
 the best option as it will enable **async request pooling**.
 * `supportsRequestPool(): bool` method should return if your provider can be pooled to enhance performances. If you are using a third party library to fetch your data (such as some platform SDK), you should set it to `false`.
 * `createFeedItemFromObject($item)` method which transform a raw feed object into a canonical `RZ\MixedFeed\Canonical\FeedItem` and `RZ\MixedFeed\Canonical\Image`
 * `getDateTime` method to look for the critical datetime field in your feed.
-* `getFeed` method to consume your API endpoint with a count limit and take care of caching your responses. 
+* `getFeed` method to consume your API endpoint with a count limit and take care of caching your responses.
 This method **must convert your own feed items into `\stdClass` objects, not arrays.**
 * `getCanonicalMessage` method to look for the important text content in your feed items.
 * `getFeedPlatform` method to get a global text identifier for your feed items.
@@ -255,7 +255,7 @@ protected function getFeed($count = 5)
             $object = new \stdClass();
             $object->native = $article;
             return $object;
-        }, 
+        },
         $this->entityManager->getRepository(Article::class)->findBy(
             [],
             ['datetime' => 'DESC'],
@@ -270,13 +270,13 @@ protected function createFeedItemFromObject($item)
     $feedItem->setDateTime($this->getDateTime($item));
     $feedItem->setMessage($this->getCanonicalMessage($item));
     $feedItem->setPlatform($this->getFeedPlatform());
-    
+
     for ($item->images as $image) {
         $feedItemImage = new RZ\MixedFeed\Canonical\Image();
         $feedItemImage->setUrl($image->url);
         $feedItem->addImage($feedItemImage);
     }
-   
+
     return $feedItem;
 }
 ```
@@ -299,7 +299,7 @@ public function getDateTime($item)
 /**
  * @inheritDoc
  */
-public function getCanonicalMessage($item)
+public function getCanonicalMessage(stdClass $item)
 {
     if ($item->native instanceof Article) {
         return $item->native->getExcerpt();

@@ -1,187 +1,149 @@
 <?php
+
 namespace RZ\MixedFeed;
 
-use Doctrine\Common\Cache\CacheProvider;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Utils;
+use Psr\Cache\CacheItemPoolInterface;
 use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Exception\FeedProviderErrorException;
+use stdClass;
 
 /**
  * Implements a basic feed provider with
- * platform name and \DateTime injection.
+ * platform name and DateTime injection.
  */
 abstract class AbstractFeedProvider implements FeedProviderInterface
 {
-    protected $ttl = 7200;
-    /**
-     * @var null|array
-     */
+    protected ?int $ttl = 7200;
+
+    /** @var mixed|null */
     protected $rawFeed = null;
-    /**
-     * @var CacheProvider|null
-     */
-    protected $cacheProvider;
-    /**
-     * @var array
-     */
-    protected $errors = [];
 
-    /**
-     * AbstractFeedProvider constructor.
-     *
-     * @param CacheProvider|null $cacheProvider
-     */
-    public function __construct(CacheProvider $cacheProvider = null)
-    {
-        $this->cacheProvider = $cacheProvider;
-    }
+    protected ?CacheItemPoolInterface $cacheProvider;
 
-    /**
-     * @inheritDoc
-     */
-    public function addError(string $reason): FeedProviderInterface
-    {
-        $this->errors[] = $reason;
-        return $this;
-    }
-
-    /**
-     * @param int $count
-     * @return mixed
-     */
-    protected function getFeed($count = 5)
-    {
-        $rawFeed = $this->getRawFeed($count);
-        if ($this->isValid($rawFeed)) {
-            return $rawFeed;
-        }
-        return [];
-    }
+    /** @var string[] */
+    protected array $errors = [];
 
     abstract protected function getCacheKey(): string;
 
     /**
-     * @param int $count
-     *
-     * @return bool
+     * AbstractFeedProvider constructor.
      */
-    public function isCacheHit($count = 5): bool
+    public function __construct(?CacheItemPoolInterface $cacheProvider = null)
     {
-        return null !== $this->cacheProvider &&
-            $this->cacheProvider->contains($this->getCacheKey() . $count);
+        $this->cacheProvider = $cacheProvider;
     }
 
-    /**
-     * @param string|array $rawFeed
-     * @param bool         $json
-     *
-     * @return AbstractFeedProvider
-     */
-    public function setRawFeed($rawFeed, $json = true): AbstractFeedProvider
+    public function addError(string $reason): FeedProviderInterface
     {
-        if ($json === true) {
-            $rawFeed = json_decode($rawFeed);
-            if ('No error' !== $jsonError = json_last_error_msg()) {
-                throw new \RuntimeException($jsonError);
-            }
-        }
-        $this->rawFeed = $rawFeed;
+        $this->errors[] = $reason;
+
         return $this;
     }
 
+    public function isCacheHit(int $count = 5): bool
+    {
+        if (!$this->cacheProvider) {
+            return false;
+        }
+
+        $countKey = $this->getCacheKey().$count;
+
+        return $this->cacheProvider->getItem($countKey)->isHit();
+    }
+
+    /** @param string $rawFeed */
+    public function setRawFeed(string $rawFeed): AbstractFeedProvider
+    {
+        $this->rawFeed = Utils::jsonDecode($rawFeed);
+
+        return $this;
+    }
+
+    /** @return mixed */
+    protected function getFeed(int $count = 5)
+    {
+        $rawFeed = $this->getCachedRawFeed($count);
+
+        if ($this->isValid($rawFeed)) {
+            return $rawFeed;
+        }
+
+        return [];
+    }
+
     /**
-     * @param int $count
-     *
      * @return mixed
+     *
      * @throws FeedProviderErrorException
      */
-    protected function getRawFeed($count = 5)
+    protected function getRawFeed(int $count = 5)
     {
-        $countKey = $this->getCacheKey() . $count;
-
         if (null !== $this->rawFeed) {
-            if (null !== $this->cacheProvider &&
-                !$this->cacheProvider->contains($countKey)) {
-                $this->cacheProvider->save(
-                    $countKey,
-                    $this->rawFeed,
-                    $this->ttl
-                );
-            }
             return $this->rawFeed;
         }
 
         try {
-            if (null !== $this->cacheProvider &&
-                $this->cacheProvider->contains($countKey)) {
-                return $this->cacheProvider->fetch($countKey);
-            }
-
             $client = new Client([
                 'http_errors' => true,
             ]);
             $response = $client->send($this->getRequests($count)->current());
-            $body = json_decode($response->getBody()->getContents());
-            if ('No error' !== $jsonError = json_last_error_msg()) {
-                throw new FeedProviderErrorException($this->getFeedPlatform(), $jsonError);
-            }
 
-            if (null !== $this->cacheProvider) {
-                $this->cacheProvider->save(
-                    $countKey,
-                    $body,
-                    $this->ttl
-                );
-            }
-            return $body;
+            return Utils::jsonDecode($response->getBody()->getContents());
         } catch (GuzzleException $e) {
-            throw new FeedProviderErrorException($this->getFeedPlatform(), $e->getMessage(), $e);
+            throw new FeedProviderErrorException($this->getFeedPlatform(), $e->getMessage(), $e, );
         }
     }
 
     /**
-     * {@inheritdoc}
+     * @return mixed
+     *
+     * @throws FeedProviderErrorException
      */
-    public function getItems($count = 5)
+    protected function getCachedRawFeed(int $count = 5)
     {
-        $list = $this->getFeed($count);
-        /*
-         * Need to inject feed item platform, normalizedDate and canonicalMessage
-         * to be able to merge them with other types
-         */
-        foreach ($list as $index => $item) {
-            if (is_object($item)) {
-                $item->feedItemPlatform = $this->getFeedPlatform();
-                $item->normalizedDate = $this->getDateTime($item);
-                $item->canonicalMessage = $this->getCanonicalMessage($item);
-            } else {
-                unset($list[$index]);
-            }
+        if (!$this->cacheProvider) {
+            return $this->getRawFeed($count);
         }
-        return $list;
+
+        $countKey = $this->getCacheKey().$count;
+        $item = $this->cacheProvider->getItem($countKey);
+
+        if ($item->isHit()) {
+            return $item->get();
+        }
+
+        $feed = $this->getRawFeed($count);
+        $item->set($feed);
+        $item->expiresAfter($this->ttl);
+
+        $this->cacheProvider->save($item);
+
+        return $feed;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getCanonicalItems($count = 5)
+    public function getCanonicalItems(int $count = 5): array
     {
         $items = [];
-        foreach ($this->getFeed($count) as $index => $item) {
-            if (is_object($item)) {
+
+        foreach ($this->getFeed($count) as $item) {
+            if ($item instanceof stdClass) {
                 $items[] = $this->createFeedItemFromObject($item);
             }
         }
+
         return $items;
     }
 
     /**
      * Gets the value of ttl.
-     *
-     * @return integer
      */
-    public function getTtl()
+    public function getTtl(): ?int
     {
         return $this->ttl;
     }
@@ -189,34 +151,26 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
     /**
      * Sets the value of ttl.
      *
-     * @param integer $ttl the ttl
-     *
-     * @return self
+     * @param int $ttl the ttl
      */
-    public function setTtl($ttl)
+    public function setTtl(?int $ttl): AbstractFeedProvider
     {
         $this->ttl = $ttl;
 
         return $this;
     }
 
-    /**
-     * @param \stdClass $item
-     *
-     * @return FeedItem
-     */
-    protected function createFeedItemFromObject($item): FeedItem
+    protected function createFeedItemFromObject(stdClass $item): FeedItem
     {
         $feedItem = new FeedItem();
+        $feedItem->setRaw($item);
         $feedItem->setDateTime($this->getDateTime($item));
         $feedItem->setMessage($this->getCanonicalMessage($item));
         $feedItem->setPlatform($this->getFeedPlatform());
+
         return $feedItem;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function supportsRequestPool(): bool
     {
         return true;
@@ -225,24 +179,12 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
     /**
      * {@inheritdoc}
      */
-    public function isValid($feed)
+    public function isValid($feed): bool
     {
-        if (count($this->errors) > 0) {
-            throw new FeedProviderErrorException($this->getFeedPlatform(), implode(', ', $this->errors));
+        if (\count($this->errors) > 0) {
+            throw new FeedProviderErrorException($this->getFeedPlatform(), \implode(', ', $this->errors));
         }
-        return null !== $feed && is_iterable($feed->items);
-    }
 
-    /**
-     * Get errors details.
-     *
-     * @param mixed $feed
-     *
-     * @return string
-     * @deprecated Catch FeedProviderErrorException for errors details.
-     */
-    public function getErrors($feed)
-    {
-        return $feed['error'];
+        return null !== $feed && \is_iterable($feed->items);
     }
 }

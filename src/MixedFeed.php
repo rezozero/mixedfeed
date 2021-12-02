@@ -1,48 +1,41 @@
 <?php
+
 namespace RZ\MixedFeed;
 
+use DateTime;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Pool;
 use GuzzleHttp\Psr7\Response;
 use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Exception\FeedProviderErrorException;
-use RZ\MixedFeed\MockObject\ErroredFeedItem;
 
 /**
  * Combine feed providers and sort them by date and time, descending or ascending.
  */
-class MixedFeed extends AbstractFeedProvider
+class MixedFeed
 {
-    const ASC = 'ASC';
-    const DESC = 'DESC';
+    public const ASC = 'ASC';
+    public const DESC = 'DESC';
 
     /**
      * @var FeedProviderInterface[]
      */
-    protected $providers;
+    protected array $providers;
 
-    /**
-     * @var string
-     */
-    protected $sortDirection;
-
-    protected function getCacheKey(): string
-    {
-        return '';
-    }
+    protected string $sortDirection;
 
     /**
      * Create a mixed feed composed of heterogeneous feed providers.
      *
      * @param FeedProviderInterface[] $providers
-     * @param string $sortDirection
+     * @param string                  $sortDirection
      */
     public function __construct(array $providers = [], $sortDirection = MixedFeed::DESC)
     {
-        parent::__construct(null);
         foreach ($providers as $provider) {
             if (!($provider instanceof FeedProviderInterface)) {
-                throw new \RuntimeException("Provider must implements FeedProviderInterface interface.", 1);
+                throw new \RuntimeException('Provider must implements FeedProviderInterface interface.', 1);
             }
         }
 
@@ -51,64 +44,42 @@ class MixedFeed extends AbstractFeedProvider
     }
 
     /**
-     * @deprecated
+     * @return FeedItem[]
      */
-    public function getItems($count = 5)
+    public function getCanonicalItems(int $count = 5): array
     {
         $list = [];
-        if (count($this->providers) > 0) {
-            $perProviderCount = floor($count / count($this->providers));
+        if (\count($this->providers) > 0) {
+            $perProviderCount = (int) \floor($count / \count($this->providers));
 
             /** @var FeedProviderInterface $provider */
             foreach ($this->providers as $provider) {
                 try {
-                    $list = array_merge($list, $provider->getItems($perProviderCount));
-                } catch (FeedProviderErrorException $e) {
-                    $list = array_merge($list, [
-                        new ErroredFeedItem($e->getMessage(), $provider->getFeedPlatform()),
-                    ]);
-                }
-            }
-        }
-
-        return $this->sortFeedObjects($list);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getCanonicalItems($count = 5)
-    {
-        $list = [];
-        if (count($this->providers) > 0) {
-            $perProviderCount = floor($count / count($this->providers));
-
-            /** @var FeedProviderInterface $provider */
-            foreach ($this->providers as $provider) {
-                try {
-                    $list = array_merge($list, $provider->getCanonicalItems($perProviderCount));
+                    /** @var FeedItem[] $list */
+                    $list = \array_merge($list, $provider->getCanonicalItems($perProviderCount));
                 } catch (FeedProviderErrorException $e) {
                     $errorItem = new FeedItem();
                     $errorItem->setMessage($e->getMessage());
-                    $errorItem->setPlatform($provider->getFeedPlatform() . ' [errored]');
-                    $errorItem->setDateTime(new \DateTime());
-                    $list = array_merge($list, [
-                        $errorItem
+                    $errorItem->setPlatform($provider->getFeedPlatform().' [errored]');
+                    $errorItem->setDateTime(new DateTime());
+                    $list = \array_merge($list, [
+                        $errorItem,
                     ]);
                 }
             }
         }
+
         return $this->sortFeedItems($list);
     }
 
     /**
      * @param FeedItem[] $feedItems
      *
-     * @return array
+     * @return FeedItem[] $feedItems
      */
     protected function sortFeedItems(array $feedItems): array
     {
-        usort($feedItems, function (FeedItem $a, FeedItem $b) {
+        \usort($feedItems, function (FeedItem $a, FeedItem $b) {
             $aDT = $a->getDateTime();
             $bDT = $b->getDateTime();
 
@@ -122,99 +93,26 @@ class MixedFeed extends AbstractFeedProvider
             // DESC sorting
             return ($aDT > $bDT) ? -1 : 1;
         });
+
         return $feedItems;
     }
 
     /**
-     * @param \stdClass[] $items
-     *
-     * @return array
+     * @return FeedItem[]
      */
-    protected function sortFeedObjects(array $items)
+    public function getAsyncCanonicalItems(int $count = 5): array
     {
-        usort($items, function (\stdClass $a, \stdClass $b) {
-            $aDT = $a->normalizedDate;
-            $bDT = $b->normalizedDate;
-
-            if ($aDT == $bDT) {
-                return 0;
-            }
-            // ASC sorting
-            if ($this->sortDirection === static::ASC) {
-                return ($aDT > $bDT) ? 1 : -1;
-            }
-            // DESC sorting
-            return ($aDT > $bDT) ? -1 : 1;
-        });
-
-        return $items;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getFeedPlatform()
-    {
-        return 'mixed';
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getDateTime($item)
-    {
-        return new \DateTime('now');
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getCanonicalMessage($item)
-    {
-        return "";
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function isValid($feed)
-    {
-        return true;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getErrors($feed)
-    {
-        return '';
-    }
-
-    /**
-     * @inheritDoc
-     */
-    protected function getFeed($count = 5): array
-    {
-        trigger_error('getFeed method must not be called in MixedFeed.', E_USER_ERROR);
-        return [];
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getAsyncCanonicalItems($count = 5): array
-    {
-        if (count($this->providers) === 0) {
+        if (0 === \count($this->providers)) {
             throw new \RuntimeException('No provider were registered');
         }
-        $perProviderCount = floor($count / count($this->providers));
+        $perProviderCount = (int) \floor($count / \count($this->providers));
         $list = [];
         $requests = [];
         /** @var FeedProviderInterface $provider */
         foreach ($this->providers as $providerIdx => $provider) {
             if ($provider->supportsRequestPool() && !$provider->isCacheHit($perProviderCount)) {
                 foreach ($provider->getRequests($perProviderCount) as $i => $request) {
-                    $index = $providerIdx . '.' . $i;
+                    $index = $providerIdx.'.'.$i;
                     $requests[$index] = $request;
                 }
             }
@@ -223,22 +121,25 @@ class MixedFeed extends AbstractFeedProvider
         $client = new Client();
         $pool = new Pool($client, $requests, [
             'concurrency' => 6,
-            'fulfilled' => function ($response, $index) {
-                list($providerIdx, $i) = explode('.', $index);
+            'fulfilled'   => function (Response $response, $index) {
+                list($providerIdx, $i) = \explode('.', $index);
                 $provider = $this->providers[$providerIdx];
-                if ($provider instanceof AbstractFeedProvider &&
-                    $response instanceof Response &&
-                    $response->getStatusCode() === 200) {
+                if (
+                    200 === $response->getStatusCode()
+                    && $provider instanceof AbstractFeedProvider
+                    && $response instanceof Response
+                ) {
                     $provider->setRawFeed($response->getBody()->getContents());
                 } else {
                     $provider->addError($response->getReasonPhrase());
                 }
             },
-            'rejected' => function ($reason, $index) {
-                list($providerIdx, $i) = explode('.', $index);
+            'rejected' => function (RequestException $reason, $index) {
+                list($providerIdx, $i) = \explode('.', $index);
                 $provider = $this->providers[$providerIdx];
-                if ($provider instanceof AbstractFeedProvider &&
-                    method_exists($reason, 'getMessage')) {
+                if (
+                    $provider instanceof AbstractFeedProvider
+                ) {
                     $provider->addError($reason->getMessage());
                 }
             },
@@ -253,37 +154,19 @@ class MixedFeed extends AbstractFeedProvider
              * For providers which already have a cached response
              */
             try {
-                $list = array_merge($list, $provider->getCanonicalItems($perProviderCount));
+                /** @var FeedItem[] $list */
+                $list = \array_merge($list, $provider->getCanonicalItems($perProviderCount));
             } catch (FeedProviderErrorException $e) {
                 $errorItem = new FeedItem();
                 $errorItem->setMessage($e->getMessage());
-                $errorItem->setPlatform($provider->getFeedPlatform() . ' [errored]');
-                $errorItem->setDateTime(new \DateTime());
-                $list = array_merge($list, [
-                    $errorItem
+                $errorItem->setPlatform($provider->getFeedPlatform().' [errored]');
+                $errorItem->setDateTime(new DateTime());
+                $list = \array_merge($list, [
+                    $errorItem,
                 ]);
             }
         }
 
         return $this->sortFeedItems($list);
-    }
-
-    /**
-     * @param int $count
-     *
-     * @return \Generator
-     */
-    public function getRequests($count = 5): \Generator
-    {
-        if (count($this->providers) === 0) {
-            throw new \RuntimeException('No provider were registered');
-        }
-
-        $perProviderCount = floor($count / count($this->providers));
-
-        /** @var FeedProviderInterface $provider */
-        foreach ($this->providers as $provider) {
-            yield iterator_to_array($provider->getRequests($perProviderCount));
-        }
     }
 }

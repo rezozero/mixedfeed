@@ -1,111 +1,109 @@
 <?php
+
 namespace RZ\MixedFeed;
 
-use Doctrine\Common\Cache\CacheProvider;
+use DateTime;
+use Generator;
 use GuzzleHttp\Psr7\Request;
+use Psr\Cache\CacheItemPoolInterface;
 use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Canonical\Image;
 use RZ\MixedFeed\Exception\CredentialsException;
 use RZ\MixedFeed\Exception\FeedProviderErrorException;
+use stdClass;
 
 /**
  * Get an Instagram user feed.
+ *
  * @deprecated Use GraphInstagramFeed to comply with new Facebook API policy
  */
 class InstagramFeed extends AbstractFeedProvider
 {
-    protected $userId;
-    protected $accessToken;
-    protected static $timeKey = 'created_time';
+    protected string $userId;
+    protected string $accessToken;
 
     /**
      * InstagramFeed constructor.
      *
-     * @param string $userId
-     * @param string $accessToken
-     * @param CacheProvider|null $cacheProvider
-     *
      * @throws CredentialsException
      */
-    public function __construct($userId, $accessToken, CacheProvider $cacheProvider = null)
+    public function __construct(string $userId, string $accessToken, ?CacheItemPoolInterface $cacheProvider = null)
     {
         parent::__construct($cacheProvider);
         $this->userId = $userId;
         $this->accessToken = $accessToken;
 
-        if (null === $this->accessToken ||
-            false === $this->accessToken ||
-            empty($this->accessToken)) {
-            throw new CredentialsException("InstagramFeed needs a valid access token.", 1);
+        if (empty($this->accessToken)) {
+            throw new CredentialsException('InstagramFeed needs a valid access token.', 1);
         }
     }
 
     protected function getCacheKey(): string
     {
-        return $this->getFeedPlatform() . $this->userId;
+        return $this->getFeedPlatform().$this->userId;
     }
 
     /**
      * @inheritDoc
      */
-    public function getRequests($count = 5): \Generator
+    public function getRequests(int $count = 5): Generator
     {
-        $value = http_build_query([
+        $value = \http_build_query([
             'access_token' => $this->accessToken,
-            'count' => $count,
-        ], null, '&', PHP_QUERY_RFC3986);
+            'count'        => $count,
+        ], '', '&', PHP_QUERY_RFC3986);
         yield new Request(
             'GET',
-            'https://api.instagram.com/v1/users/' . $this->userId . '/media/recent/?'.$value
+            'https://api.instagram.com/v1/users/'.$this->userId.'/media/recent/?'.$value
         );
     }
 
-    protected function getFeed($count = 5)
+    protected function getFeed(int $count = 5)
     {
-        $rawFeed = $this->getRawFeed($count);
+        $rawFeed = $this->getCachedRawFeed($count);
         if ($this->isValid($rawFeed)) {
             return $rawFeed->data;
         }
+
         return [];
     }
 
     /**
      * {@inheritdoc}
      */
-    public function isValid($feed)
+    public function isValid($feed): bool
     {
-        if (count($this->errors) > 0) {
-            throw new FeedProviderErrorException($this->getFeedPlatform(), implode(', ', $this->errors));
+        if (\count($this->errors) > 0) {
+            throw new FeedProviderErrorException($this->getFeedPlatform(), \implode(', ', $this->errors));
         }
-        return isset($feed->data) && is_iterable($feed->data);
+
+        return isset($feed->data) && \is_iterable($feed->data);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getDateTime($item)
+    public function getDateTime($item): DateTime
     {
-        $date = new \DateTime();
-        $date->setTimestamp($item->created_time);
-        return $date;
+        return new DateTime('@'.$item->created_time);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getCanonicalMessage($item)
+    public function getCanonicalMessage(stdClass $item): string
     {
         if (null !== $item->caption) {
             return $item->caption->text;
         }
 
-        return "";
+        return '';
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getFeedPlatform()
+    public function getFeedPlatform(): string
     {
         return 'instagram';
     }
@@ -113,7 +111,7 @@ class InstagramFeed extends AbstractFeedProvider
     /**
      * @inheritDoc
      */
-    protected function createFeedItemFromObject($item): FeedItem
+    protected function createFeedItemFromObject(stdClass $item): FeedItem
     {
         $feedItem = parent::createFeedItemFromObject($item);
         $feedItem->setId($item->id);
@@ -127,6 +125,7 @@ class InstagramFeed extends AbstractFeedProvider
         $feedItemImage->setWidth($item->images->standard_resolution->width);
         $feedItemImage->setHeight($item->images->standard_resolution->height);
         $feedItem->addImage($feedItemImage);
+
         return $feedItem;
     }
 }

@@ -1,12 +1,13 @@
 <?php
-declare(strict_types=1);
 
 namespace RZ\MixedFeed;
 
-use Doctrine\Common\Cache\CacheProvider;
+use Generator;
 use GuzzleHttp\Psr7\Request;
+use Psr\Cache\CacheItemPoolInterface;
 use RZ\MixedFeed\AbstractFeedProvider\AbstractYoutubeVideoFeed;
 use RZ\MixedFeed\Canonical\FeedItem;
+use stdClass;
 
 class YoutubePlaylistItemFeed extends AbstractYoutubeVideoFeed
 {
@@ -16,13 +17,9 @@ class YoutubePlaylistItemFeed extends AbstractYoutubeVideoFeed
     protected $playlistId;
 
     /**
-     * @param string             $playlistId
-     * @param string             $apiKey
-     * @param CacheProvider|null $cacheProvider
-     *
      * @throws Exception\CredentialsException
      */
-    public function __construct(string $playlistId, string $apiKey, CacheProvider $cacheProvider = null)
+    public function __construct(string $playlistId, string $apiKey, ?CacheItemPoolInterface $cacheProvider = null)
     {
         parent::__construct($apiKey, $cacheProvider);
 
@@ -31,19 +28,14 @@ class YoutubePlaylistItemFeed extends AbstractYoutubeVideoFeed
 
     protected function getCacheKey(): string
     {
-        return $this->getFeedPlatform() . serialize($this->playlistId);
+        return $this->getFeedPlatform().\serialize($this->playlistId);
     }
 
-    /**
-     * @param int $count
-     *
-     * @return \Generator
-     */
-    public function getRequests($count = 5): \Generator
+    public function getRequests(int $count = 5): Generator
     {
-        $value = http_build_query([
-            'part' => 'snippet,contentDetails',
-            'key' => $this->apiKey,
+        $value = \http_build_query([
+            'part'       => 'snippet,contentDetails',
+            'key'        => $this->apiKey,
             'playlistId' => $this->playlistId,
             'maxResults' => $count,
         ]);
@@ -56,7 +48,7 @@ class YoutubePlaylistItemFeed extends AbstractYoutubeVideoFeed
     /**
      * {@inheritdoc}
      */
-    public function getFeedPlatform()
+    public function getFeedPlatform(): string
     {
         return 'youtube_playlist_items';
     }
@@ -64,11 +56,11 @@ class YoutubePlaylistItemFeed extends AbstractYoutubeVideoFeed
     /**
      * @inheritDoc
      */
-    protected function createFeedItemFromObject($item): FeedItem
+    protected function createFeedItemFromObject(stdClass $item): FeedItem
     {
         $feedItem = parent::createFeedItemFromObject($item);
         $feedItem->setId($item->snippet->resourceId->videoId);
-        $feedItem->setLink('https://www.youtube.com/watch?v=' . $item->snippet->resourceId->videoId);
+        $feedItem->setLink('https://www.youtube.com/watch?v='.$item->snippet->resourceId->videoId);
 
         return $feedItem;
     }

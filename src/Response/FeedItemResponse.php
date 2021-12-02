@@ -1,21 +1,20 @@
 <?php
+
 namespace RZ\MixedFeed\Response;
+
+use RZ\MixedFeed\Canonical\FeedItem;
 
 class FeedItemResponse
 {
-    /**
-     * @var array
-     */
-    protected $items;
+    /** @var FeedItem[] */
+    protected array $items;
+
+    /** @var mixed[] */
+    protected array $meta;
 
     /**
-     * @var array
-     */
-    protected $meta;
-
-    /**
-     * @param array $feedItems
-     * @param array $meta
+     * @param FeedItem[] $feedItems
+     * @param mixed[]    $meta
      */
     public function __construct(array $feedItems, array $meta)
     {
@@ -23,19 +22,13 @@ class FeedItemResponse
         $this->meta = $meta;
     }
 
-    /**
-     * @return array
-     */
+    /** @return FeedItem[] */
     public function getItems(): array
     {
         return $this->items;
     }
 
-    /**
-     * @param array $items
-     *
-     * @return FeedItemResponse
-     */
+    /** @param FeedItem[] $items */
     public function setItems(array $items): FeedItemResponse
     {
         $this->items = $items;
@@ -43,19 +36,13 @@ class FeedItemResponse
         return $this;
     }
 
-    /**
-     * @return array
-     */
+    /** @return mixed[] */
     public function getMeta(): array
     {
         return $this->meta;
     }
 
-    /**
-     * @param array $meta
-     *
-     * @return FeedItemResponse
-     */
+    /** @param mixed[] $meta */
     public function setMeta(array $meta): FeedItemResponse
     {
         $this->meta = $meta;

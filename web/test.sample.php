@@ -1,20 +1,19 @@
 <?php
-use Doctrine\Common\Cache\ArrayCache;
-use Doctrine\Common\Cache\FilesystemCache;
+
 use JMS\Serializer\SerializerBuilder;
 use RZ\MixedFeed\Response\FeedItemResponse;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\Stopwatch\Stopwatch;
 
-if (PHP_VERSION_ID < 70200) {
-    $message = 'Your PHP version is ' . phpversion() . "." . PHP_EOL;
-    $message .= 'You need a least PHP version 7.2.0';
+if (PHP_VERSION_ID < 70400) {
+    $message = 'Your PHP version is '.phpversion().'.'.PHP_EOL;
+    $message .= 'You need a least PHP version 7.4.0';
     throw new \RuntimeException($message);
 }
 
-require dirname(__DIR__) . '/vendor/autoload.php';
+require dirname(__DIR__).'/vendor/autoload.php';
 
-$cache = new ArrayCache();
-// $cache = new FilesystemCache(dirname(__FILE__).'/var/cache');
+$cache = new ArrayAdapter();
 $feed = new \RZ\MixedFeed\MixedFeed([
     // Add some providers here
 ]);
@@ -28,7 +27,7 @@ $serializer = SerializerBuilder::create()->build();
 $feedItems = $feed->getAsyncCanonicalItems(20);
 $event = $sw->stop('fetch');
 $feedItemResponse = new FeedItemResponse($feedItems, [
-    'time' => $event->getDuration(),
+    'time'   => $event->getDuration(),
     'memory' => $event->getMemory(),
 ]);
 $jsonContent = $serializer->serialize($feedItemResponse, 'json');

@@ -1,13 +1,17 @@
 <?php
+
 namespace RZ\MixedFeed\AbstractFeedProvider;
 
 use Abraham\TwitterOAuth\TwitterOAuth;
-use Doctrine\Common\Cache\CacheProvider;
+use DateTime;
+use Generator;
+use Psr\Cache\CacheItemPoolInterface;
 use RZ\MixedFeed\AbstractFeedProvider as BaseFeedProvider;
 use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Canonical\Image;
 use RZ\MixedFeed\Exception\CredentialsException;
 use RZ\MixedFeed\Exception\FeedProviderErrorException;
+use stdClass;
 
 /**
  * Get a Twitter tweets abstract feed.
@@ -15,60 +19,38 @@ use RZ\MixedFeed\Exception\FeedProviderErrorException;
 abstract class AbstractTwitterFeed extends BaseFeedProvider
 {
     /**
-     * Shorter TTL for Twitter - 5 min
-     * @var int
+     * Shorter TTL for Twitter - 5 min.
      */
-    protected $ttl = 60*5;
-    /**
-     * @var string
-     */
-    protected $accessToken;
-    /**
-     * @var TwitterOAuth
-     */
-    protected $twitterConnection;
-    /**
-     * @var string
-     */
-    protected static $timeKey = 'created_at';
+    protected ?int $ttl = 60 * 5;
+
+    protected string $accessToken;
+
+    protected TwitterOAuth $twitterConnection;
 
     /**
-     * @param string $consumerKey
-     * @param string $consumerSecret
-     * @param string $accessToken
-     * @param string $accessTokenSecret
-     * @param CacheProvider|null $cacheProvider
      * @throws CredentialsException
      */
     public function __construct(
-        $consumerKey,
-        $consumerSecret,
-        $accessToken,
-        $accessTokenSecret,
-        CacheProvider $cacheProvider = null
+        string $consumerKey,
+        string $consumerSecret,
+        string $accessToken,
+        string $accessTokenSecret,
+        ?CacheItemPoolInterface $cacheProvider = null
     ) {
         parent::__construct($cacheProvider);
         $this->accessToken = $accessToken;
 
-        if (null === $accessToken ||
-            false === $accessToken ||
-            empty($accessToken)) {
-            throw new CredentialsException("TwitterSearchFeed needs a valid access token.", 1);
+        if (empty($accessToken)) {
+            throw new CredentialsException('TwitterSearchFeed needs a valid access token.', 1);
         }
-        if (null === $accessTokenSecret ||
-            false === $accessTokenSecret ||
-            empty($accessTokenSecret)) {
-            throw new CredentialsException("TwitterSearchFeed needs a valid access token secret.", 1);
+        if (empty($accessTokenSecret)) {
+            throw new CredentialsException('TwitterSearchFeed needs a valid access token secret.', 1);
         }
-        if (null === $consumerKey ||
-            false === $consumerKey ||
-            empty($consumerKey)) {
-            throw new CredentialsException("TwitterSearchFeed needs a valid consumer key.", 1);
+        if (empty($consumerKey)) {
+            throw new CredentialsException('TwitterSearchFeed needs a valid consumer key.', 1);
         }
-        if (null === $consumerSecret ||
-            false === $consumerSecret ||
-            empty($consumerSecret)) {
-            throw new CredentialsException("TwitterSearchFeed needs a valid consumer secret.", 1);
+        if (empty($consumerSecret)) {
+            throw new CredentialsException('TwitterSearchFeed needs a valid consumer secret.', 1);
         }
 
         $this->twitterConnection = new TwitterOAuth(
@@ -82,17 +64,15 @@ abstract class AbstractTwitterFeed extends BaseFeedProvider
     /**
      * {@inheritdoc}
      */
-    public function getDateTime($item)
+    public function getDateTime($item): DateTime
     {
-        $date = new \DateTime();
-        $date->setTimestamp(strtotime($item->created_at));
-        return $date;
+        return new DateTime('@'.\strtotime($item->created_at));
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getCanonicalMessage($item)
+    public function getCanonicalMessage(stdClass $item): string
     {
         if (isset($item->text)) {
             return $item->text;
@@ -101,12 +81,7 @@ abstract class AbstractTwitterFeed extends BaseFeedProvider
         return $item->full_text;
     }
 
-    /**
-     * @param int $count
-     *
-     * @return \Generator
-     */
-    public function getRequests($count = 5): \Generator
+    public function getRequests(int $count = 5): Generator
     {
         throw new \RuntimeException('Twitter cannot be used in async mode');
     }
@@ -114,7 +89,7 @@ abstract class AbstractTwitterFeed extends BaseFeedProvider
     /**
      * {@inheritdoc}
      */
-    public function getFeedPlatform()
+    public function getFeedPlatform(): string
     {
         return 'twitter';
     }
@@ -122,35 +97,19 @@ abstract class AbstractTwitterFeed extends BaseFeedProvider
     /**
      * {@inheritdoc}
      */
-    public function isValid($feed)
+    public function isValid($feed): bool
     {
-        if (count($this->errors) > 0) {
-            throw new FeedProviderErrorException($this->getFeedPlatform(), implode(', ', $this->errors));
-        }
-        return null !== $feed && is_array($feed);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getErrors($feed)
-    {
-        $errors = "";
-
-        if (null !== $feed && null !== $feed->errors && !empty($feed->errors)) {
-            foreach ($feed->errors as $error) {
-                $errors .= "[" . $error->code . "] ";
-                $errors .= $error->message . PHP_EOL;
-            }
+        if (\count($this->errors) > 0) {
+            throw new FeedProviderErrorException($this->getFeedPlatform(), \implode(', ', $this->errors));
         }
 
-        return $errors;
+        return null !== $feed && \is_array($feed);
     }
 
     /**
      * @inheritDoc
      */
-    protected function createFeedItemFromObject($item): FeedItem
+    protected function createFeedItemFromObject(stdClass $item): FeedItem
     {
         $feedItem = parent::createFeedItemFromObject($item);
         $feedItem->setId($item->id_str);
@@ -168,8 +127,8 @@ abstract class AbstractTwitterFeed extends BaseFeedProvider
 
         if (isset($item->entities->hashtags)) {
             foreach ($item->entities->hashtags as $hashtag) {
-                $feedItem->setTags(array_merge($feedItem->getTags(), [
-                    $hashtag->text
+                $feedItem->setTags(\array_merge($feedItem->getTags(), [
+                    $hashtag->text,
                 ]));
             }
         }

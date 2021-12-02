@@ -1,8 +1,15 @@
 {
     "name": "rezozero/mixedfeed",
-    "description": "A PHP library to get social networks feeds and merge them",
-    "license": "MIT",
     "type": "library",
+    "description": "A PHP library to get social networks feeds and merge them",
+    "keywords": [
+        "feed",
+        "social",
+        "social networks",
+        "aggregator",
+        "rezo zero"
+    ],
+    "license": "MIT",
     "authors": [
         {
             "name": "Ambroise Maupate",
@@ -11,28 +18,29 @@
             "role": "Lead developer"
         }
     ],
-    "keywords": [
-        "feed",
-        "social",
-        "social networks",
-        "aggregator",
-        "rezo zero"
-    ],
     "require": {
-        "php": ">=7.2",
-        "abraham/twitteroauth": "^2.0.0",
-        "doctrine/cache": "^1.6.2",
-        "guzzlehttp/guzzle": "~6.0 || ~7.0",
-        "ext-json": "*"
-    },
-    "autoload": {
-        "psr-4": {"RZ\\MixedFeed\\": "src/"}
+        "php": "^7.4 || ^8.0",
+        "ext-json": "*",
+        "abraham/twitteroauth": "^3.0",
+        "guzzlehttp/guzzle": "^7.0",
+        "guzzlehttp/promises": "^1.5",
+        "guzzlehttp/psr7": "^2.1",
+        "psr/cache": "^1.0 || ^2.0 || ^3.0"
     },
     "require-dev": {
-        "squizlabs/php_codesniffer": "^3.3",
         "jms/serializer": "^2.1 || ^3.5",
-        "symfony/stopwatch": ">=4.2",
-        "symfony/dotenv": ">=4.2",
-        "phpstan/phpstan": "^0.12.14"
+        "phpstan/phpstan": "^1.0",
+        "squizlabs/php_codesniffer": "^3.3",
+        "symfony/cache": "^5.0",
+        "symfony/dotenv": "^5.0",
+        "symfony/stopwatch": "^5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "RZ\\MixedFeed\\": "src/"
+        }
+    },
+    "scripts": {
+        "analyze": "vendor/bin/phpstan"
     }
 }
