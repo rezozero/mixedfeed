@@ -31,6 +31,10 @@ docker run -p 8080:80 \
     rezozero/mixedfeed
 ```
 
+or use `docker-compose`: copy `docker-compose.yml` to `docker-compose.test.yml` and fill your provider credentials in
+it. Then execute `docker-compose -f docker-compose.test.yml up -d --force-recreate`, *Mixedfeed* will be available at
+http://localhost:8080
+
 ### Available environment variables
 
 | Name              | Default value | Multiple? (comma separated) |
@@ -41,8 +45,6 @@ docker run -p 8080:80 \
 | MF_FACEBOOK_ACCESS_TOKEN | | |
 | MF_FACEBOOK_FIELDS | from,link,picture,full_picture,message,story,type,created_time,source,status_type | ✅ |
 | MF_FACEBOOK_ENDPOINT | https://graph.facebook.com/v2.12/ | |
-| MF_INSTAGRAM_USER_ID | | ✅ |
-| MF_INSTAGRAM_ACCESS_TOKEN | | |
 | MF_GRAPH_INSTAGRAM_USER_ID | | ✅ |
 | MF_GRAPH_INSTAGRAM_ACCESS_TOKEN | | ✅ |
 | MF_GITHUB_RELEASES_REPOSITORY | | ✅ |

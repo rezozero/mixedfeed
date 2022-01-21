@@ -9,8 +9,8 @@ services:
       # MF_FACEBOOK_ACCESS_TOKEN: ""
       # MF_FACEBOOK_FIELDS: "from,picture,full_picture,message,story,created_time,status_type,message_tags,shares,permalink_url"
       # MF_FACEBOOK_ENDPOINT: "https://graph.facebook.com/v2.12/"
-      # MF_INSTAGRAM_USER_ID: ""
-      # MF_INSTAGRAM_ACCESS_TOKEN: ""
+      # MF_GRAPH_INSTAGRAM_USER_ID: ""
+      # MF_GRAPH_INSTAGRAM_ACCESS_TOKEN: ""
 
       # MF_GITHUB_RELEASES_REPOSITORY: ""
       # MF_GITHUB_COMMITS_REPOSITORY: ""
