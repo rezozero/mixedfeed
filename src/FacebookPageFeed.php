@@ -1,11 +1,15 @@
 <?php
+
 namespace RZ\MixedFeed;
 
-use Doctrine\Common\Cache\CacheProvider;
+use DateTime;
+use Generator;
 use GuzzleHttp\Psr7\Request;
+use Psr\Cache\CacheItemPoolInterface;
 use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Canonical\Image;
 use RZ\MixedFeed\Exception\CredentialsException;
+use stdClass;
 
 /**
  * Get a Facebook public page timeline feed using an App Token.
@@ -14,39 +18,28 @@ use RZ\MixedFeed\Exception\CredentialsException;
  */
 class FacebookPageFeed extends AbstractFeedProvider
 {
-    protected $pageId;
-    protected $accessToken;
-    protected $fields;
+    protected string $pageId;
+    protected string $accessToken;
+    /** @var string[] */
+    protected array $fields;
 
-    protected $apiBaseUrl = 'https://graph.facebook.com/v3.3/';
+    protected string $apiBaseUrl = 'https://graph.facebook.com/v3.3/';
 
-    /**
-     * @var \DateTime|null
-     */
-    protected $since = null;
-    /**
-     * @var \DateTime|null
-     */
-    protected $until = null;
-
-    protected static $timeKey = 'created_time';
+    protected ?DateTime $since = null;
+    protected ?DateTime $until = null;
 
     /**
-     *
-     * @param string             $pageId
-     * @param string             $accessToken Your App Token
-     * @param CacheProvider|null $cacheProvider
-     * @param array              $fields
-     * @param string|null        $apiBaseUrl
+     * @param string   $accessToken Your App Token
+     * @param string[] $fields
      *
      * @throws CredentialsException
      */
     public function __construct(
-        $pageId,
-        $accessToken,
-        CacheProvider $cacheProvider = null,
-        $fields = [],
-        $apiBaseUrl = null
+        string $pageId,
+        string $accessToken,
+        ?CacheItemPoolInterface $cacheProvider = null,
+        array $fields = [],
+        ?string $apiBaseUrl = null
     ) {
         parent::__construct($cacheProvider);
         $this->pageId = $pageId;
@@ -61,15 +54,13 @@ class FacebookPageFeed extends AbstractFeedProvider
             'status_type',
             'message_tags',
             'shares',
-            'permalink_url'
+            'permalink_url',
         ];
-        $this->fields = array_unique(array_merge($this->fields, $fields));
+        $this->fields = \array_unique(\array_merge($this->fields, $fields));
         $this->apiBaseUrl = $apiBaseUrl ?: $this->apiBaseUrl;
 
-        if (null === $this->accessToken ||
-            false === $this->accessToken ||
-            empty($this->accessToken)) {
-            throw new CredentialsException("FacebookPageFeed needs a valid App access token.", 1);
+        if (empty($this->accessToken)) {
+            throw new CredentialsException('FacebookPageFeed needs a valid App access token.', 1);
         }
     }
 
@@ -81,54 +72,57 @@ class FacebookPageFeed extends AbstractFeedProvider
     /**
      * @inheritDoc
      */
-    public function getRequests($count = 5): \Generator
+    public function getRequests(int $count = 5): Generator
     {
         $params = [
             'access_token' => $this->accessToken,
-            'limit' => $count,
-            'fields' => implode(',', $this->fields),
+            'limit'        => $count,
+            'fields'       => \implode(',', $this->fields),
         ];
         /*
          * Filter by date range
          */
-        if (null !== $this->since &&
-            $this->since instanceof \Datetime) {
+        if (
+            null !== $this->since &&
+            $this->since instanceof DateTime
+        ) {
             $params['since'] = $this->since->getTimestamp();
         }
-        if (null !== $this->until &&
-            $this->until instanceof \Datetime) {
+        if (
+            null !== $this->until &&
+            $this->until instanceof DateTime
+        ) {
             $params['until'] = $this->until->getTimestamp();
         }
-        $value = http_build_query($params, null, '&', PHP_QUERY_RFC3986);
+        $value = \http_build_query($params, '', '&', PHP_QUERY_RFC3986);
         yield new Request(
             'GET',
-            $this->apiBaseUrl . $this->pageId . '/posts?'.$value
+            $this->apiBaseUrl . $this->pageId . '/posts?' . $value
         );
     }
 
-    protected function getFeed($count = 5)
+    protected function getFeed(int $count = 5)
     {
-        $rawFeed = $this->getRawFeed($count);
-        if (is_array($rawFeed) && isset($rawFeed['error'])) {
+        $rawFeed = $this->getCachedRawFeed($count);
+        if (\is_array($rawFeed) && isset($rawFeed['error'])) {
             return $rawFeed;
         }
+
         return $rawFeed->data;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getDateTime($item)
+    public function getDateTime($item): ?DateTime
     {
-        $date = new \DateTime();
-        $date->setTimestamp(strtotime($item->created_time));
-        return $date;
+        return new DateTime('@' . \strtotime($item->created_time));
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getCanonicalMessage($item)
+    public function getCanonicalMessage(stdClass $item): string
     {
         return isset($item->message) ? $item->message : '';
     }
@@ -136,17 +130,15 @@ class FacebookPageFeed extends AbstractFeedProvider
     /**
      * {@inheritdoc}
      */
-    public function getFeedPlatform()
+    public function getFeedPlatform(): string
     {
         return 'facebook_page';
     }
 
     /**
      * Gets the value of since.
-     *
-     * @return \Datetime
      */
-    public function getSince()
+    public function getSince(): ?DateTime
     {
         return $this->since;
     }
@@ -154,11 +146,9 @@ class FacebookPageFeed extends AbstractFeedProvider
     /**
      * Sets the value of since.
      *
-     * @param \Datetime $since the since
-     *
-     * @return self
+     * @param DateTime $since the since
      */
-    public function setSince(\Datetime $since)
+    public function setSince(?DateTime $since): AbstractFeedProvider
     {
         $this->since = $since;
 
@@ -167,10 +157,8 @@ class FacebookPageFeed extends AbstractFeedProvider
 
     /**
      * Gets the value of until.
-     *
-     * @return \Datetime
      */
-    public function getUntil()
+    public function getUntil(): ?DateTime
     {
         return $this->until;
     }
@@ -178,11 +166,9 @@ class FacebookPageFeed extends AbstractFeedProvider
     /**
      * Sets the value of until.
      *
-     * @param \Datetime $until the until
-     *
-     * @return self
+     * @param DateTime $until the until
      */
-    public function setUntil(\Datetime $until)
+    public function setUntil(?DateTime $until): AbstractFeedProvider
     {
         $this->until = $until;
 
@@ -192,7 +178,7 @@ class FacebookPageFeed extends AbstractFeedProvider
     /**
      * @inheritDoc
      */
-    protected function createFeedItemFromObject($item): FeedItem
+    protected function createFeedItemFromObject(stdClass $item): FeedItem
     {
         $feedItem = parent::createFeedItemFromObject($item);
         $feedItem->setId($item->id);
@@ -211,7 +197,7 @@ class FacebookPageFeed extends AbstractFeedProvider
         }
 
         if (isset($item->message_tags)) {
-            $feedItem->setTags(array_map(function ($messageTag) {
+            $feedItem->setTags(\array_map(function ($messageTag) {
                 return $messageTag->name;
             }, $item->message_tags));
         }
@@ -225,22 +211,20 @@ class FacebookPageFeed extends AbstractFeedProvider
         return $feedItem;
     }
 
-    /**
-     * @return array
-     */
+    /** @return string[] */
     public function getFields(): array
     {
         return $this->fields;
     }
 
     /**
-     * @param array $fields
+     * @param string[] $fields
      *
      * @return FacebookPageFeed
      */
     public function setFields(array $fields)
     {
-        $this->fields = array_unique($fields);
+        $this->fields = \array_unique($fields);
 
         return $this;
     }

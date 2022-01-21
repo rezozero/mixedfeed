@@ -1,8 +1,10 @@
 <?php
+
 namespace RZ\MixedFeed;
 
+use Abraham\TwitterOAuth\TwitterOAuth;
 use Abraham\TwitterOAuth\TwitterOAuthException;
-use Doctrine\Common\Cache\CacheProvider;
+use Psr\Cache\CacheItemPoolInterface;
 use RZ\MixedFeed\AbstractFeedProvider\AbstractTwitterFeed;
 use RZ\MixedFeed\Exception\FeedProviderErrorException;
 
@@ -11,43 +13,28 @@ use RZ\MixedFeed\Exception\FeedProviderErrorException;
  */
 class TwitterFeed extends AbstractTwitterFeed
 {
-    protected $userId;
-    protected $accessToken;
-    protected $twitterConnection;
-    protected $excludeReplies;
-    protected $includeRts;
+    protected string $userId;
+    protected string $accessToken;
+    protected TwitterOAuth $twitterConnection;
+    protected bool $excludeReplies;
+    protected bool $includeRts;
 
-    protected static $timeKey = 'created_at';
-    /**
-     * @var bool
-     */
-    protected $extended;
+    protected bool $extended;
 
     /**
-     * @param string             $userId
-     * @param string             $consumerKey
-     * @param string             $consumerSecret
-     * @param string             $accessToken
-     * @param string             $accessTokenSecret
-     * @param CacheProvider|null $cacheProvider
-     * @param boolean            $excludeReplies
-     * @param boolean            $includeRts
-     * @param bool               $extended
-     *
      * @throws Exception\CredentialsException
      */
     public function __construct(
-        $userId,
-        $consumerKey,
-        $consumerSecret,
-        $accessToken,
-        $accessTokenSecret,
-        CacheProvider $cacheProvider = null,
-        $excludeReplies = true,
-        $includeRts = false,
-        $extended = true
+        string $userId,
+        string $consumerKey,
+        string $consumerSecret,
+        string $accessToken,
+        string $accessTokenSecret,
+        ?CacheItemPoolInterface $cacheProvider = null,
+        bool $excludeReplies = true,
+        bool $includeRts = false,
+        bool $extended = true
     ) {
-
         parent::__construct(
             $consumerKey,
             $consumerSecret,
@@ -67,29 +54,17 @@ class TwitterFeed extends AbstractTwitterFeed
         return $this->getFeedPlatform() . $this->userId;
     }
 
-    protected function getFeed($count = 5)
+    protected function getRawFeed(int $count = 5)
     {
-        $countKey = $this->getCacheKey() . $count;
-
         try {
-            if (null !== $this->cacheProvider &&
-                $this->cacheProvider->contains($countKey)) {
-                return $this->cacheProvider->fetch($countKey);
-            }
-            $body = $this->twitterConnection->get("statuses/user_timeline", [
-                "user_id" => $this->userId,
-                "count" => $count,
-                "exclude_replies" => $this->excludeReplies,
-                'include_rts' => $this->includeRts,
-                'tweet_mode' =>  ($this->extended ? 'extended' : '')
+            $body = $this->twitterConnection->get('statuses/user_timeline', [
+                'user_id'         => $this->userId,
+                'count'           => $count,
+                'exclude_replies' => $this->excludeReplies,
+                'include_rts'     => $this->includeRts,
+                'tweet_mode'      => ($this->extended ? 'extended' : ''),
             ]);
-            if (null !== $this->cacheProvider) {
-                $this->cacheProvider->save(
-                    $countKey,
-                    $body,
-                    $this->ttl
-                );
-            }
+
             return $body;
         } catch (TwitterOAuthException $e) {
             throw new FeedProviderErrorException($this->getFeedPlatform(), $e->getMessage(), $e);

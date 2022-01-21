@@ -1,40 +1,29 @@
 <?php
-declare(strict_types=1);
 
 namespace RZ\MixedFeed\Graph;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Utils as GuzzleUtils;
 use RZ\MixedFeed\Exception\FeedProviderErrorException;
 
 final class RefreshInstagramAccessToken
 {
-    /**
-     * @var string
-     */
-    private $accessToken;
+    private string $accessToken;
 
-    /**
-     * @var string
-     */
-    private static $grantType = 'ig_refresh_token';
+    private static string $grantType = 'ig_refresh_token';
 
-    /**
-     * @param string $accessToken
-     */
     public function __construct(string $accessToken)
     {
         $this->accessToken = $accessToken;
     }
 
-    /**
-     * @throws FeedProviderErrorException
-     */
+    /** @throws FeedProviderErrorException */
     public function getRefreshedAccessToken(): AccessToken
     {
         $value = \http_build_query([
-            'grant_type' => static::$grantType,
+            'grant_type'   => self::$grantType,
             'access_token' => $this->accessToken,
         ]);
 
@@ -44,9 +33,12 @@ final class RefreshInstagramAccessToken
             ]);
             $response = $client->send(new Request(
                 'GET',
-                'https://graph.instagram.com/refresh_access_token?'.$value
+                'https://graph.instagram.com/refresh_access_token?' . $value
             ));
-            return AccessToken::fromArray(json_decode($response->getBody()->getContents(), true));
+
+            $body = GuzzleUtils::jsonDecode($response->getBody()->getContents(), true);
+
+            return AccessToken::fromArray((array) $body);
         } catch (GuzzleException $e) {
             throw new FeedProviderErrorException(RefreshInstagramAccessToken::class, $e->getMessage(), $e);
         }

@@ -1,8 +1,9 @@
 <?php
+
 namespace RZ\MixedFeed;
 
 use Abraham\TwitterOAuth\TwitterOAuthException;
-use Doctrine\Common\Cache\CacheProvider;
+use Psr\Cache\CacheItemPoolInterface;
 use RZ\MixedFeed\AbstractFeedProvider\AbstractTwitterFeed;
 use RZ\MixedFeed\Exception\FeedProviderErrorException;
 
@@ -11,47 +12,26 @@ use RZ\MixedFeed\Exception\FeedProviderErrorException;
  */
 class TwitterSearchFeed extends AbstractTwitterFeed
 {
-    protected $queryParams;
+    /** @var string[] */
+    protected array $queryParams;
+
+    protected bool $includeRetweets = true;
+
+    protected bool $extended = false;
+
+    protected string $resultType = 'mixed';
 
     /**
-     * @var bool
-     */
-    protected $includeRetweets = true;
-
-    /**
-     * @var bool
-     */
-    protected $extended = false;
-
-    /**
-     * @var string
-     */
-    protected $resultType = 'mixed';
-
-    /**
-     * @var string
-     */
-    protected static $timeKey = 'created_at';
-
-    /**
-     * @param array              $queryParams
-     * @param string             $consumerKey
-     * @param string             $consumerSecret
-     * @param string             $accessToken
-     * @param string             $accessTokenSecret
-     * @param CacheProvider|null $cacheProvider
-     * @param bool               $extended
-     *
      * @throws Exception\CredentialsException
      */
     public function __construct(
         array $queryParams,
-        $consumerKey,
-        $consumerSecret,
-        $accessToken,
-        $accessTokenSecret,
-        CacheProvider $cacheProvider = null,
-        $extended = true
+        string $consumerKey,
+        string $consumerSecret,
+        string $accessToken,
+        string $accessTokenSecret,
+        ?CacheItemPoolInterface $cacheProvider = null,
+        bool $extended = true
     ) {
         parent::__construct(
             $consumerKey,
@@ -61,93 +41,70 @@ class TwitterSearchFeed extends AbstractTwitterFeed
             $cacheProvider
         );
 
-        $this->queryParams = array_filter($queryParams);
+        $this->queryParams = \array_filter($queryParams);
         $this->extended = $extended;
     }
 
     protected function getCacheKey(): string
     {
-        return $this->getFeedPlatform() . md5(serialize($this->queryParams));
+        return $this->getFeedPlatform() . \md5(\serialize($this->queryParams));
     }
 
-    /**
-     * @return string
-     */
-    protected function formatQueryParams()
+    protected function formatQueryParams(): string
     {
         $inlineParams = [];
         foreach ($this->queryParams as $key => $value) {
-            if (is_numeric($key)) {
+            if (\is_numeric($key)) {
                 $inlineParams[] = $value;
             } else {
                 $inlineParams[] = $key . ':' . $value;
             }
         }
 
-        return implode(' ', $inlineParams);
+        return \implode(' ', $inlineParams);
     }
 
-    protected function getFeed($count = 5)
+    protected function getRawFeed(int $count = 5)
     {
-        $countKey = $this->getCacheKey() . $count;
-
         try {
-            if (null !== $this->cacheProvider &&
-                $this->cacheProvider->contains($countKey)) {
-                return $this->cacheProvider->fetch($countKey);
-            }
-
-            if ($this->includeRetweets === false) {
+            if (false === $this->includeRetweets) {
                 $this->queryParams['-filter'] = 'retweets';
             }
 
             $params = [
-                "q" => $this->formatQueryParams(),
-                "count" => $count,
-                "result_type" => $this->resultType,
+                'q'           => $this->formatQueryParams(),
+                'count'       => $count,
+                'result_type' => $this->resultType,
             ];
             if ($this->extended) {
                 $params['tweet_mode'] = 'extended';
             }
 
             /** @var object $body */
-            $body = $this->twitterConnection->get("search/tweets", $params);
+            $body = $this->twitterConnection->get('search/tweets', $params);
 
-            if (null !== $this->cacheProvider) {
-                $this->cacheProvider->save(
-                    $countKey,
-                    $body->statuses,
-                    $this->ttl
-                );
-            }
-            return $body->statuses;
+            return isset($body->statuses) ? $body->statuses : [];
         } catch (TwitterOAuthException $e) {
             throw new FeedProviderErrorException($this->getFeedPlatform(), $e->getMessage(), $e);
         }
     }
 
-    /**
-     * @return bool
-     */
-    public function isIncludeRetweets()
+    public function isIncludeRetweets(): bool
     {
         return $this->includeRetweets;
     }
 
     /**
-     * @param bool $includeRetweets
      * @return TwitterSearchFeed
      */
-    public function setIncludeRetweets($includeRetweets)
+    public function setIncludeRetweets(bool $includeRetweets): AbstractFeedProvider
     {
         $this->includeRetweets = $includeRetweets;
+
         return $this;
     }
 
-    /**
-     * @return string
-     */
-    public function getResultType()
+    public function getResultType(): string
     {
         return $this->resultType;
     }
@@ -158,12 +115,12 @@ class TwitterSearchFeed extends AbstractTwitterFeed
      * recent : return only the most recent results in the response
      * popular : return only the most popular results in the response.
      *
-     * @param string $resultType
      * @return TwitterSearchFeed
      */
-    public function setResultType($resultType)
+    public function setResultType(string $resultType): AbstractFeedProvider
     {
         $this->resultType = $resultType;
+
         return $this;
     }
 }

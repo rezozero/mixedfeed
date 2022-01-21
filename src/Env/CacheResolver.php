@@ -1,29 +1,27 @@
 <?php
+
 namespace RZ\MixedFeed\Env;
 
-use Doctrine\Common\Cache\ApcuCache;
-use Doctrine\Common\Cache\ArrayCache;
-use Doctrine\Common\Cache\CacheProvider;
-use Doctrine\Common\Cache\FilesystemCache;
-use Doctrine\Common\Cache\PhpFileCache;
+use Psr\Cache\CacheItemPoolInterface;
+use Symfony\Component\Cache\Adapter\ApcuAdapter;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 
 class CacheResolver
 {
-    /**
-     * @return CacheProvider
-     */
-    public static function parseFromEnvironment()
+    public static function parseFromEnvironment(): CacheItemPoolInterface
     {
-        $cacheDir = dirname(dirname(__DIR__)).'/var/cache';
-        switch (getenv('MF_CACHE_PROVIDER')) {
+        $cacheDir = \dirname(\dirname(__DIR__)) . '/var/cache';
+        switch (\getenv('MF_CACHE_PROVIDER')) {
             case 'apcu':
-                return new ApcuCache();
+                return new ApcuAdapter('mixedfeed');
             case 'file':
-                return new FilesystemCache($cacheDir);
+                return new FilesystemAdapter('mixedfeed', 0, $cacheDir);
             case 'php':
-                return new PhpFileCache($cacheDir);
+                return new PhpFilesAdapter('mixedfeed', 0, $cacheDir);
             default:
-                return new ArrayCache();
+                return new ArrayAdapter();
         }
     }
 }

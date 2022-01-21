@@ -1,80 +1,80 @@
 <?php
-declare(strict_types=1);
 
 namespace RZ\MixedFeed\AbstractFeedProvider;
 
-use Doctrine\Common\Cache\CacheProvider;
+use DateTime;
+use Psr\Cache\CacheItemPoolInterface;
 use RZ\MixedFeed\AbstractFeedProvider;
 use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Canonical\Image;
 use RZ\MixedFeed\Exception\CredentialsException;
+use stdClass;
 
 abstract class AbstractYoutubeVideoFeed extends AbstractFeedProvider
 {
+    public const YOUTUBE_URL_FORMAT = 'https://www.youtube.com/watch?v=%s';
+
     /**
      * @var string
      */
     protected $apiKey;
 
     /**
-     * @param string             $apiKey
-     * @param CacheProvider|null $cacheProvider
-     *
      * @throws CredentialsException
      */
-    public function __construct(string $apiKey, CacheProvider $cacheProvider = null)
+    public function __construct(string $apiKey, ?CacheItemPoolInterface $cacheProvider = null)
     {
         parent::__construct($cacheProvider);
 
         $this->apiKey = $apiKey;
 
-        if (null === $this->apiKey ||
-            false === $this->apiKey ||
-            empty($this->apiKey)) {
-            throw new CredentialsException("YoutubeVideoFeed needs a valid apiKey.", 1);
+        if (empty($this->apiKey)) {
+            throw new CredentialsException('YoutubeVideoFeed needs a valid apiKey.', 1);
         }
     }
 
-    protected function getFeed($count = 5)
+    protected function getFeed(int $count = 5)
     {
-        $rawFeed = $this->getRawFeed($count);
+        $rawFeed = $this->getCachedRawFeed($count);
         if ($this->isValid($rawFeed)) {
             return $rawFeed->items;
         }
+
         return [];
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getDateTime($item)
+    public function getDateTime($item): ?DateTime
     {
         if (isset($item->snippet->publishedAt)) {
-            return new \DateTime($item->snippet->publishedAt);
+            return new DateTime($item->snippet->publishedAt);
         }
+
         return null;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getCanonicalMessage($item)
+    public function getCanonicalMessage(stdClass $item): string
     {
         if (isset($item->snippet->title)) {
             return $item->snippet->title;
         }
 
-        return "";
+        return '';
     }
 
     /**
      * @inheritDoc
      */
-    protected function createFeedItemFromObject($item): FeedItem
+    protected function createFeedItemFromObject(stdClass $item): FeedItem
     {
         $feedItem = parent::createFeedItemFromObject($item);
         $feedItem->setId($item->id);
-        $feedItem->setLink('https://www.youtube.com/watch?v=' . $item->id);
+        $feedItem->setLink(\sprintf(self::YOUTUBE_URL_FORMAT, $item->id));
         $feedItem->setTitle($item->snippet->title);
         $feedItem->setMessage($item->snippet->description);
         $feedItem->setAuthor($item->snippet->channelTitle);
@@ -90,6 +90,7 @@ abstract class AbstractYoutubeVideoFeed extends AbstractFeedProvider
             $feedItemImage->setHeight($item->snippet->thumbnails->maxres->height);
             $feedItem->addImage($feedItemImage);
         }
+
         return $feedItem;
     }
 }
