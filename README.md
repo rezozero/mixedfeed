@@ -186,6 +186,7 @@ object with essential data: `RZ\MixedFeed\Canonical\FeedItem`. *FeedItem* will p
     - height `integer`
 - dateTime `DateTime`
 - tags `array` (only used with `MediumFeed`)
+- raw `stdClass` to access raw API object if canonical item fields are not enough
 
 When FeedItem has images, `FeedItem::$images` will hold an array of `RZ\MixedFeed\Canonical\Image` objects to
 have better access to its `url`, `width` and `height` if they're available.
