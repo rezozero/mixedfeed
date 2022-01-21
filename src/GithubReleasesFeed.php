@@ -1,56 +1,48 @@
 <?php
+
 namespace RZ\MixedFeed;
 
-use Doctrine\Common\Cache\CacheProvider;
+use DateTime;
+use Generator;
 use GuzzleHttp\Psr7\Request;
+use Psr\Cache\CacheItemPoolInterface;
 use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Exception\CredentialsException;
+use stdClass;
 
 /**
  * Get a github repository releases feed.
  */
 class GithubReleasesFeed extends AbstractFeedProvider
 {
-    protected $repository;
-    protected $accessToken;
-    protected $page;
-
-    protected static $timeKey = 'created_at';
+    protected string $repository;
+    protected string $accessToken;
+    protected int $page;
 
     /**
-     *
-     * @param string             $repository
-     * @param string             $accessToken
-     * @param CacheProvider|null $cacheProvider
-     * @param int                $page
-     *
      * @throws CredentialsException
      */
     public function __construct(
-        $repository,
-        $accessToken,
-        CacheProvider $cacheProvider = null,
-        $page = 1
+        string $repository,
+        string $accessToken,
+        ?CacheItemPoolInterface $cacheProvider = null,
+        int $page = 1
     ) {
         parent::__construct($cacheProvider);
         $this->repository = $repository;
         $this->accessToken = $accessToken;
         $this->page = $page;
 
-        if (null === $repository ||
-            false === $repository ||
-            empty($repository)) {
-            throw new CredentialsException("GithubReleasesFeed needs a valid repository name.", 1);
+        if (empty($repository)) {
+            throw new CredentialsException('GithubReleasesFeed needs a valid repository name.', 1);
         }
 
-        if (0 === preg_match('#([a-zA-Z\-\_0-9\.]+)/([a-zA-Z\-\_0-9\.]+)#', $repository)) {
-            throw new CredentialsException("GithubReleasesFeed needs a valid repository name “user/project”.", 1);
+        if (0 === \preg_match('#([a-zA-Z\-\_0-9\.]+)/([a-zA-Z\-\_0-9\.]+)#', $repository)) {
+            throw new CredentialsException('GithubReleasesFeed needs a valid repository name “user/project”.', 1);
         }
 
-        if (null === $accessToken ||
-            false === $accessToken ||
-            empty($accessToken)) {
-            throw new CredentialsException("GithubReleasesFeed needs a valid access token.", 1);
+        if (empty($accessToken)) {
+            throw new CredentialsException('GithubReleasesFeed needs a valid access token.', 1);
         }
     }
 
@@ -62,34 +54,32 @@ class GithubReleasesFeed extends AbstractFeedProvider
     /**
      * @inheritDoc
      */
-    public function getRequests($count = 5): \Generator
+    public function getRequests(int $count = 5): Generator
     {
-        $value = http_build_query([
+        $value = \http_build_query([
             'access_token' => $this->accessToken,
-            'per_page' => $count,
-            'token_type' => 'bearer',
-            'page' => $this->page,
-        ], null, '&', PHP_QUERY_RFC3986);
+            'per_page'     => $count,
+            'token_type'   => 'bearer',
+            'page'         => $this->page,
+        ], '', '&', PHP_QUERY_RFC3986);
         yield new Request(
             'GET',
-            'https://api.github.com/repos/' . $this->repository . '/releases?'.$value
+            'https://api.github.com/repos/' . $this->repository . '/releases?' . $value
         );
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getDateTime($item)
+    public function getDateTime($item): ?DateTime
     {
-        $date = new \DateTime();
-        $date->setTimestamp(strtotime($item->created_at));
-        return $date;
+        return new DateTime('@' . \strtotime($item->created_at));
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getCanonicalMessage($item)
+    public function getCanonicalMessage(stdClass $item): string
     {
         return $item->name;
     }
@@ -97,7 +87,7 @@ class GithubReleasesFeed extends AbstractFeedProvider
     /**
      * {@inheritdoc}
      */
-    public function getFeedPlatform()
+    public function getFeedPlatform(): string
     {
         return 'github_release';
     }
@@ -105,7 +95,7 @@ class GithubReleasesFeed extends AbstractFeedProvider
     /**
      * @inheritDoc
      */
-    protected function createFeedItemFromObject($item): FeedItem
+    protected function createFeedItemFromObject(stdClass $item): FeedItem
     {
         $feedItem = parent::createFeedItemFromObject($item);
         $feedItem->setId($item->id);
@@ -113,6 +103,7 @@ class GithubReleasesFeed extends AbstractFeedProvider
         $feedItem->setLink($item->html_url);
         $feedItem->setTitle($item->name);
         $feedItem->setMessage($item->body);
+
         return $feedItem;
     }
 }

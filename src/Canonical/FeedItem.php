@@ -1,281 +1,192 @@
 <?php
+
 namespace RZ\MixedFeed\Canonical;
+
+use DateTime;
+use stdClass;
 
 class FeedItem
 {
-    /**
-     * @var string
-     */
-    protected $id;
-    /**
-     * @var string
-     */
-    protected $platform;
-    /**
-     * @var string
-     */
-    protected $author;
-    /**
-     * @var string
-     */
-    protected $link;
-    /**
-     * @var string
-     */
-    protected $title;
+    protected string $id = '';
+
+    protected string $platform = '';
+
+    protected string $author = '';
+
+    protected string $link = '';
+
+    protected string $title = '';
+
     /**
      * @var Image[]
      */
-    protected $images = [];
-    /**
-     * @var string
-     */
-    protected $message;
-    /**
-     * @var \DateTime
-     */
-    protected $dateTime;
-    /**
-     * @var array
-     */
-    protected $tags = [];
-    /**
-     * @var int|null
-     */
-    protected $likeCount;
+    protected array $images = [];
+
+    protected string $message = '';
+
+    protected ?DateTime $dateTime = null;
+
+    /** @var string[] */
+    protected array $tags = [];
+
+    protected ?int $likeCount = null;
+
+    protected ?stdClass $raw = null;
 
     /**
      * Share, comments or retweet count depending on platform.
-     *
-     * @var int|null
      */
-    protected $shareCount;
+    protected ?int $shareCount = null;
 
-    /**
-     * @return string
-     */
-    public function getId()
+    public function getId(): string
     {
         return $this->id;
     }
 
-    /**
-     * @param string $id
-     *
-     * @return FeedItem
-     */
-    public function setId($id)
+    public function setId(string $id): FeedItem
     {
         $this->id = $id;
 
         return $this;
     }
 
-    /**
-     * @return string
-     */
-    public function getPlatform()
+    public function getRaw(): ?stdClass
+    {
+        return $this->raw;
+    }
+
+    public function setRaw(stdClass $object): FeedItem
+    {
+        $this->raw = $object;
+
+        return $this;
+    }
+
+    public function getPlatform(): string
     {
         return $this->platform;
     }
 
-    /**
-     * @param string $platform
-     *
-     * @return FeedItem
-     */
-    public function setPlatform($platform)
+    public function setPlatform(string $platform): FeedItem
     {
         $this->platform = $platform;
 
         return $this;
     }
 
-    /**
-     * @return string
-     */
-    public function getAuthor()
+    public function getAuthor(): string
     {
         return $this->author;
     }
 
-    /**
-     * @param string $author
-     *
-     * @return FeedItem
-     */
-    public function setAuthor($author)
+    public function setAuthor(string $author): FeedItem
     {
         $this->author = $author;
 
         return $this;
     }
 
-    /**
-     * @return string
-     */
-    public function getTitle()
+    public function getTitle(): string
     {
         return $this->title;
     }
 
-    /**
-     * @param string $title
-     *
-     * @return FeedItem
-     */
-    public function setTitle($title)
+    public function setTitle(string $title): FeedItem
     {
         $this->title = $title;
 
         return $this;
     }
 
-    /**
-     * @return Image[]
-     */
-    public function getImages()
+    /** @return Image[] */
+    public function getImages(): array
     {
         return $this->images;
     }
 
-    /**
-     * @param Image[] $images
-     *
-     * @return FeedItem
-     */
-    public function setImages($images)
+    /** @param Image[] $images */
+    public function setImages(array $images): FeedItem
     {
         $this->images = $images;
 
         return $this;
     }
 
-    /**
-     * @param Image $image
-     *
-     * @return FeedItem
-     */
-    public function addImage(Image $image)
+    public function addImage(Image $image): FeedItem
     {
         $this->images[] = $image;
+
         return $this;
     }
 
-    /**
-     * @return string
-     */
-    public function getMessage()
+    public function getMessage(): string
     {
         return $this->message;
     }
 
-    /**
-     * @param string $message
-     *
-     * @return FeedItem
-     */
-    public function setMessage($message)
+    public function setMessage(string $message): FeedItem
     {
         $this->message = $message;
 
         return $this;
     }
 
-    /**
-     * @return \DateTime
-     */
-    public function getDateTime()
+    public function getDateTime(): ?DateTime
     {
         return $this->dateTime;
     }
 
-    /**
-     * @param \DateTime $dateTime
-     *
-     * @return FeedItem
-     */
-    public function setDateTime($dateTime)
+    public function setDateTime(?DateTime $dateTime): FeedItem
     {
         $this->dateTime = $dateTime;
 
         return $this;
     }
 
-    /**
-     * @return string
-     */
-    public function getLink()
+    public function getLink(): string
     {
         return $this->link;
     }
 
-    /**
-     * @param string $link
-     *
-     * @return FeedItem
-     */
-    public function setLink($link)
+    public function setLink(string $link): FeedItem
     {
         $this->link = $link;
 
         return $this;
     }
 
-    /**
-     * @return array
-     */
-    public function getTags()
+    /** @return string[] */
+    public function getTags(): array
     {
         return $this->tags;
     }
 
-    /**
-     * @param array $tags
-     *
-     * @return FeedItem
-     */
-    public function setTags(array $tags)
+    /** @param string[] $tags */
+    public function setTags(array $tags): FeedItem
     {
         $this->tags = $tags;
 
         return $this;
     }
 
-    /**
-     * @return int|null
-     */
     public function getLikeCount(): ?int
     {
         return $this->likeCount;
     }
 
-    /**
-     * @param int $likeCount
-     *
-     * @return FeedItem
-     */
-    public function setLikeCount(int $likeCount)
+    public function setLikeCount(int $likeCount): FeedItem
     {
         $this->likeCount = $likeCount;
 
         return $this;
     }
 
-    /**
-     * @return int|null
-     */
     public function getShareCount(): ?int
     {
         return $this->shareCount;
     }
 
-    /**
-     * @param int $shareCount
-     *
-     * @return FeedItem
-     */
-    public function setShareCount(int $shareCount)
+    public function setShareCount(int $shareCount): FeedItem
     {
         $this->shareCount = $shareCount;
 

@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright © 2015, Ambroise Maupate
+ * Copyright © 2015, Ambroise Maupate.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,93 +22,64 @@
  * IN THE SOFTWARE.
  *
  * @file FeedProviderInterface.php
+ *
  * @author Ambroise Maupate
  */
+
 namespace RZ\MixedFeed;
 
+use DateTime;
+use Generator;
+use GuzzleHttp\Psr7\Request;
+use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Exception\FeedProviderErrorException;
+use stdClass;
 
 interface FeedProviderInterface
 {
-    /**
-     * @param int $count
-     *
-     * @return bool
-     */
-    public function isCacheHit($count = 5): bool;
-    /**
-     * @param int $count
-     *
-     * @return \Generator
-     */
-    public function getRequests($count = 5): \Generator;
+    public function isCacheHit(int $count = 5): bool;
+
+    /** @return Generator<Request> */
+    public function getRequests(int $count = 5): Generator;
 
     /**
      * Get the social platform name.
-     *
-     * @return string
      */
-    public function getFeedPlatform();
-    /**
-     *
-     * Get item method must return the direct
-     * feed array and must inject two parameters in each item:
-     *
-     * * feedItemPlatform (string)
-     * * normalizedDate (\DateTime)
-     *
-     * @param  integer $count
-     * @return array
-     * @throws FeedProviderErrorException
-     * @deprecated Use getCanonicalItems method
-     */
-    public function getItems($count = 5);
+    public function getFeedPlatform(): string;
 
     /**
      * Get item method must return a normalized array of FeedItem.
      *
-     * @param int $count
+     * @return FeedItem[]
      *
-     * @return mixed
      * @throws FeedProviderErrorException
      */
-    public function getCanonicalItems($count = 5);
+    public function getCanonicalItems(int $count = 5): array;
 
     /**
-     * Get a \DateTime object from a social feed item.
+     * Get a DateTime object from a social feed item.
      *
      * @param \stdClass $item
-     * @return \DateTime|null
      */
-    public function getDateTime($item);
+    public function getDateTime($item): ?DateTime;
 
     /**
      * Check if the feed provider has succeded to
      * contact API.
      *
      * @param mixed $feed
-     *
-     * @return boolean
      */
-    public function isValid($feed);
+    public function isValid($feed): bool;
 
     /**
-     * @param string $reason
-     *
      * @return $this
      */
     public function addError(string $reason): FeedProviderInterface;
 
     /**
      * Get a canonical message from current feed item.
-     *
-     * @param \stdClass $item
-     * @return string
      */
-    public function getCanonicalMessage($item);
+    public function getCanonicalMessage(stdClass $item): string;
 
-    /**
-     * @return bool
-     */
     public function supportsRequestPool(): bool;
 }

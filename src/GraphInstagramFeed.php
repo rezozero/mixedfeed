@@ -1,54 +1,56 @@
 <?php
+
 namespace RZ\MixedFeed;
 
-use Doctrine\Common\Cache\CacheProvider;
+use DateTime;
+use Generator;
 use GuzzleHttp\Psr7\Request;
+use Psr\Cache\CacheItemPoolInterface;
 use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Canonical\Image;
 use RZ\MixedFeed\Exception\CredentialsException;
 use RZ\MixedFeed\Exception\FeedProviderErrorException;
+use stdClass;
+
+use const PHP_QUERY_RFC3986;
 
 /**
- * Get an Instagram user feed from Facebook Graph API
+ * Get an Instagram user feed from Facebook Graph API.
  */
 class GraphInstagramFeed extends AbstractFeedProvider
 {
-    const TYPE_IMAGE = 'IMAGE';
-    const TYPE_VIDEO = 'VIDEO';
-    const TYPE_CAROUSEL_ALBUM = 'CAROUSEL_ALBUM';
+    public const TYPE_IMAGE = 'IMAGE';
+    public const TYPE_VIDEO = 'VIDEO';
+    public const TYPE_CAROUSEL_ALBUM = 'CAROUSEL_ALBUM';
 
-    /**
-     * @var string
-     */
-    protected $userId;
-    /**
-     * @var string
-     */
-    protected $accessToken;
-    /**
-     * @var array
-     */
-    private $fields;
+    protected string $userId;
+
+    protected string $accessToken;
+
+    /** @var string[] */
+    protected array $fields;
 
     /**
      * GraphInstagramFeed constructor.
      *
-     * @param string             $userId
-     * @param string             $accessToken
-     * @param CacheProvider|null $cacheProvider
-     * @param array              $fields
+     * @param string[] $fields
      *
      * @throws CredentialsException
      */
-    public function __construct($userId, $accessToken, CacheProvider $cacheProvider = null, array $fields = [])
-    {
+    public function __construct(
+        string $userId,
+        string $accessToken,
+        ?CacheItemPoolInterface $cacheProvider = null,
+        array $fields = []
+    ) {
         parent::__construct($cacheProvider);
+
         $this->userId = $userId;
         $this->accessToken = $accessToken;
-        if (count($fields) > 0) {
-            $this->fields = $fields;
-        } else {
-            $this->fields = [
+
+        $this->fields = \count($fields) > 0
+            ? $fields
+            : [
                 'id',
                 'username',
                 'caption',
@@ -60,13 +62,22 @@ class GraphInstagramFeed extends AbstractFeedProvider
                 'like_count',
                 'comments_count',
             ];
-        }
 
-        if (null === $this->accessToken ||
-            false === $this->accessToken ||
-            empty($this->accessToken)) {
-            throw new CredentialsException("GraphInstagramFeed needs a valid access token.", 1);
+        if (empty($this->accessToken)) {
+            throw new CredentialsException('GraphInstagramFeed needs a valid access token.', 1);
         }
+    }
+
+    /** @inheritDoc */
+    public function getRequests(int $count = 5): Generator
+    {
+        $value = \http_build_query([
+            'fields'       => \implode(',', $this->fields),
+            'access_token' => $this->accessToken,
+            'limit'        => $count,
+        ], '', '&', PHP_QUERY_RFC3986);
+
+        yield new Request('GET', 'https://graph.instagram.com/' . $this->userId . '/media?' . $value);
     }
 
     protected function getCacheKey(): string
@@ -74,87 +85,71 @@ class GraphInstagramFeed extends AbstractFeedProvider
         return $this->getFeedPlatform() . $this->userId;
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function getRequests($count = 5): \Generator
+    protected function getFeed(int $count = 5)
     {
-        $value = http_build_query([
-            'fields' => implode(',', $this->fields),
-            'access_token' => $this->accessToken,
-            'limit' => $count,
-        ], null, '&', PHP_QUERY_RFC3986);
-        yield new Request(
-            'GET',
-            'https://graph.instagram.com/' . $this->userId . '/media?'.$value
-        );
-    }
+        $rawFeed = $this->getCachedRawFeed($count);
 
-    protected function getFeed($count = 5)
-    {
-        $rawFeed = $this->getRawFeed($count);
         if ($this->isValid($rawFeed)) {
             return $rawFeed->data;
         }
+
         return [];
     }
 
     /**
      * {@inheritdoc}
      */
-    public function isValid($feed)
+    public function isValid($feed): bool
     {
-        if (count($this->errors) > 0) {
-            throw new FeedProviderErrorException($this->getFeedPlatform(), implode(', ', $this->errors));
+        if (\count($this->errors) > 0) {
+            throw new FeedProviderErrorException($this->getFeedPlatform(), \implode(', ', $this->errors));
         }
-        return isset($feed->data) && is_iterable($feed->data);
+
+        return isset($feed->data) && \is_iterable($feed->data);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getDateTime($item)
+    public function getDateTime($item): DateTime
     {
-        return new \DateTime($item->timestamp);
+        return new DateTime($item->timestamp);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getCanonicalMessage($item)
+    public function getCanonicalMessage(stdClass $item): string
     {
         if (null !== $item->caption) {
             return $item->caption;
         }
 
-        return "";
+        return '';
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getFeedPlatform()
+    public function getFeedPlatform(): string
     {
         return 'instagram';
     }
 
-    /**
-     * @inheritDoc
-     */
-    protected function createFeedItemFromObject($item): FeedItem
+    /** @inheritDoc */
+    protected function createFeedItemFromObject(stdClass $item): FeedItem
     {
         $feedItem = parent::createFeedItemFromObject($item);
         $feedItem->setId($item->id);
         $feedItem->setAuthor($item->username);
         $feedItem->setLink($item->permalink);
+
         if (isset($item->like_count)) {
             $feedItem->setLikeCount($item->like_count);
         }
+
         if (isset($item->comments_count)) {
             $feedItem->setShareCount($item->comments_count);
         }
 
-        if ($item->media_type === static::TYPE_VIDEO && !empty($item->thumbnail_url)) {
+        if (self::TYPE_VIDEO === $item->media_type && !empty($item->thumbnail_url)) {
             $feedItemImage = new Image();
             $feedItemImage->setUrl($item->thumbnail_url);
             $feedItem->addImage($feedItemImage);

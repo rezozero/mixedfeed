@@ -1,75 +1,45 @@
 <?php
+
 namespace RZ\MixedFeed\Canonical;
 
 class Image
 {
-    /**
-     * @var string
-     */
-    protected $url;
-    /**
-     * @var int
-     */
-    protected $width;
-    /**
-     * @var int
-     */
-    protected $height;
+    protected string $url = '';
 
-    /**
-     * @return string
-     */
-    public function getUrl()
+    protected int $width = 0;
+
+    protected int $height = 0;
+
+    public function getUrl(): string
     {
         return $this->url;
     }
 
-    /**
-     * @param string $url
-     *
-     * @return Image
-     */
-    public function setUrl($url)
+    public function setUrl(string $url): Image
     {
         $this->url = $url;
 
         return $this;
     }
 
-    /**
-     * @return int
-     */
-    public function getWidth()
+    public function getWidth(): int
     {
         return $this->width;
     }
 
-    /**
-     * @param int $width
-     *
-     * @return Image
-     */
-    public function setWidth($width)
+    public function setWidth(int $width): Image
     {
         $this->width = $width;
 
         return $this;
     }
 
-    /**
-     * @return int
-     */
-    public function getHeight()
+    public function getHeight(): int
     {
         return $this->height;
     }
 
-    /**
-     * @param int $height
-     *
-     * @return Image
-     */
-    public function setHeight($height)
+    public function setHeight(int $height): Image
     {
         $this->height = $height;
 

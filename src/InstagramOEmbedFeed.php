@@ -1,30 +1,33 @@
 <?php
+
 namespace RZ\MixedFeed;
 
-use Doctrine\Common\Cache\CacheProvider;
+use DateTime;
+use Generator;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Promise;
 use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Utils as GuzzleUtils;
+use Psr\Cache\CacheItemPoolInterface;
 use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Canonical\Image;
 use RZ\MixedFeed\Exception\FeedProviderErrorException;
+use stdClass;
 
 class InstagramOEmbedFeed extends AbstractFeedProvider
 {
-    /**
-     * @var array
-     */
-    protected $embedUrls;
+    protected array $embedUrls;
+
     /**
      * InstagramOEmbedFeed constructor.
      *
      * @param string[]|array $embedUrls
-     * @param CacheProvider|null $cacheProvider
      */
-    public function __construct($embedUrls, CacheProvider $cacheProvider = null)
+    public function __construct(array $embedUrls, ?CacheItemPoolInterface $cacheProvider = null)
     {
         parent::__construct($cacheProvider);
         foreach ($embedUrls as $i => $url) {
-            if (0 === preg_match('#^https?:\/\/www\.instagram\.com\/p\/#', $url)) {
+            if (0 === \preg_match('#^https?:\/\/www\.instagram\.com\/p\/#', $url)) {
                 $embedUrls[$i] = 'https://www.instagram.com/p/' . $url;
             }
         }
@@ -33,23 +36,18 @@ class InstagramOEmbedFeed extends AbstractFeedProvider
 
     protected function getCacheKey(): string
     {
-        return $this->getFeedPlatform() . serialize($this->embedUrls);
+        return $this->getFeedPlatform() . \serialize($this->embedUrls);
     }
 
-    /**
-     * @param int $count
-     *
-     * @return \Generator
-     */
-    public function getRequests($count = 5): \Generator
+    public function getRequests(int $count = 5): Generator
     {
         foreach ($this->embedUrls as $embedUrl) {
-            $value = http_build_query([
+            $value = \http_build_query([
                 'url' => $embedUrl,
-            ], null, '&', PHP_QUERY_RFC3986);
+            ], '', '&', PHP_QUERY_RFC3986);
             yield new Request(
                 'GET',
-                'https://api.instagram.com/oembed?'.$value
+                'https://api.instagram.com/oembed?' . $value
             );
         }
     }
@@ -57,51 +55,32 @@ class InstagramOEmbedFeed extends AbstractFeedProvider
     /**
      * @param mixed $rawFeed
      * @param bool  $json
-     *
-     * @return AbstractFeedProvider
      */
     public function setRawFeed($rawFeed, $json = true): AbstractFeedProvider
     {
         if (null === $this->rawFeed) {
             $this->rawFeed = [];
         }
-        if ($json === true) {
-            $rawFeed = json_decode($rawFeed);
-            if ('No error' !== $jsonError = json_last_error_msg()) {
-                throw new \RuntimeException($jsonError);
-            }
+        if (true === $json && \is_string($rawFeed)) {
+            GuzzleUtils::jsonDecode($rawFeed, true);
         }
-        array_push($this->rawFeed, $rawFeed);
+        \array_push($this->rawFeed, $rawFeed);
+
         return $this;
     }
 
     /**
-     * @param int $count
-     *
      * @return array
+     *
      * @throws FeedProviderErrorException
      */
-    protected function getRawFeed($count = 5)
+    protected function getRawFeed(int $count = 5)
     {
-        $countKey = $this->getCacheKey() . $count;
-
         if (null !== $this->rawFeed) {
-            if (null !== $this->cacheProvider &&
-                !$this->cacheProvider->contains($countKey)) {
-                $this->cacheProvider->save(
-                    $countKey,
-                    $this->rawFeed,
-                    $this->ttl
-                );
-            }
             return $this->rawFeed;
         }
 
         try {
-            if (null !== $this->cacheProvider &&
-                $this->cacheProvider->contains($countKey)) {
-                return $this->cacheProvider->fetch($countKey);
-            }
             $body = [];
             $promises = [];
             $client = new \GuzzleHttp\Client();
@@ -109,26 +88,15 @@ class InstagramOEmbedFeed extends AbstractFeedProvider
                 // Initiate each request but do not block
                 $promises[] = $client->sendAsync($request);
             }
-            $responses = \GuzzleHttp\Promise\settle($promises)->wait();
+            /** @var array $responses */
+            $responses = Promise\Utils::settle($promises)->wait();
 
-            /** @var array $response */
             foreach ($responses as $response) {
-                if ($response['state'] !== 'rejected') {
-                    array_push($body, json_decode($response['value']->getBody()->getContents()));
-                    if ('No error' !== $jsonError = json_last_error_msg()) {
-                        throw new \RuntimeException($jsonError);
-                    }
+                if ('rejected' !== $response['state']) {
+                    \array_push($body, GuzzleUtils::jsonDecode($response['value']->getBody()->getContents()));
                 } else {
                     throw $response['reason'];
                 }
-            }
-
-            if (null !== $this->cacheProvider) {
-                $this->cacheProvider->save(
-                    $countKey,
-                    $body,
-                    $this->ttl
-                );
             }
 
             return $body;
@@ -140,7 +108,7 @@ class InstagramOEmbedFeed extends AbstractFeedProvider
     /**
      * {@inheritdoc}
      */
-    public function getFeedPlatform()
+    public function getFeedPlatform(): string
     {
         return 'instagram_oembed';
     }
@@ -148,10 +116,10 @@ class InstagramOEmbedFeed extends AbstractFeedProvider
     /**
      * {@inheritdoc}
      */
-    public function isValid($feed)
+    public function isValid($feed): bool
     {
-        if (count($this->errors) > 0) {
-            throw new FeedProviderErrorException($this->getFeedPlatform(), implode(', ', $this->errors));
+        if (\count($this->errors) > 0) {
+            throw new FeedProviderErrorException($this->getFeedPlatform(), \implode(', ', $this->errors));
         }
         // OEmbed response is not iterable because there is only one item
         return null !== $feed;
@@ -160,30 +128,31 @@ class InstagramOEmbedFeed extends AbstractFeedProvider
     /**
      * {@inheritdoc}
      */
-    public function getDateTime($item)
+    public function getDateTime($item): ?DateTime
     {
-        if (false !== preg_match("#datetime=\\\"([^\"]+)\\\"#", $item->html, $matches)) {
-            return new \DateTime($matches[1]);
+        if (false !== \preg_match('#datetime=\\"([^"]+)\\"#', $item->html, $matches)) {
+            return new DateTime('@' . $matches[1]);
         }
+
         return null;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getCanonicalMessage($item)
+    public function getCanonicalMessage(stdClass $item): string
     {
         if (isset($item->title)) {
             return $item->title;
         }
 
-        return "";
+        return '';
     }
 
     /**
      * @inheritDoc
      */
-    protected function createFeedItemFromObject($item): FeedItem
+    protected function createFeedItemFromObject(stdClass $item): FeedItem
     {
         $feedItem = parent::createFeedItemFromObject($item);
         $feedItem->setId($item->media_id);
@@ -194,6 +163,7 @@ class InstagramOEmbedFeed extends AbstractFeedProvider
         $feedItemImage->setWidth($item->thumbnail_width);
         $feedItemImage->setHeight($item->thumbnail_height);
         $feedItem->addImage($feedItemImage);
+
         return $feedItem;
     }
 }
