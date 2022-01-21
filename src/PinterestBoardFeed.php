@@ -43,7 +43,7 @@ class PinterestBoardFeed extends AbstractFeedProvider
 
     protected function getCacheKey(): string
     {
-        return $this->getFeedPlatform().$this->boardId;
+        return $this->getFeedPlatform() . $this->boardId;
     }
 
     /**
@@ -58,7 +58,7 @@ class PinterestBoardFeed extends AbstractFeedProvider
         ], '', '&', PHP_QUERY_RFC3986);
         yield new Request(
             'GET',
-            'https://api.pinterest.com/v1/boards/'.$this->boardId.'/pins?'.$value
+            'https://api.pinterest.com/v1/boards/' . $this->boardId . '/pins?' . $value
         );
     }
 
@@ -94,7 +94,7 @@ class PinterestBoardFeed extends AbstractFeedProvider
      */
     public function getDateTime($item): DateTime
     {
-        return new DateTime('@'.\strtotime($item->created_at));
+        return new DateTime('@' . \strtotime($item->created_at));
     }
 
     /**
@@ -120,7 +120,7 @@ class PinterestBoardFeed extends AbstractFeedProvider
     {
         $feedItem = parent::createFeedItemFromObject($item);
         $feedItem->setId($item->id);
-        $feedItem->setAuthor($item->creator->first_name.' '.$item->creator->last_name);
+        $feedItem->setAuthor($item->creator->first_name . ' ' . $item->creator->last_name);
         $feedItem->setLink($item->url);
 
         if (isset($item->image)) {

@@ -47,7 +47,7 @@ class TwitterSearchFeed extends AbstractTwitterFeed
 
     protected function getCacheKey(): string
     {
-        return $this->getFeedPlatform().\md5(\serialize($this->queryParams));
+        return $this->getFeedPlatform() . \md5(\serialize($this->queryParams));
     }
 
     protected function formatQueryParams(): string
@@ -57,7 +57,7 @@ class TwitterSearchFeed extends AbstractTwitterFeed
             if (\is_numeric($key)) {
                 $inlineParams[] = $value;
             } else {
-                $inlineParams[] = $key.':'.$value;
+                $inlineParams[] = $key . ':' . $value;
             }
         }
 

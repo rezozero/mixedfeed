@@ -66,7 +66,7 @@ class FacebookPageFeed extends AbstractFeedProvider
 
     protected function getCacheKey(): string
     {
-        return $this->getFeedPlatform().$this->pageId;
+        return $this->getFeedPlatform() . $this->pageId;
     }
 
     /**
@@ -97,7 +97,7 @@ class FacebookPageFeed extends AbstractFeedProvider
         $value = \http_build_query($params, '', '&', PHP_QUERY_RFC3986);
         yield new Request(
             'GET',
-            $this->apiBaseUrl.$this->pageId.'/posts?'.$value
+            $this->apiBaseUrl . $this->pageId . '/posts?' . $value
         );
     }
 
@@ -116,7 +116,7 @@ class FacebookPageFeed extends AbstractFeedProvider
      */
     public function getDateTime($item): ?DateTime
     {
-        return new DateTime('@'.\strtotime($item->created_time));
+        return new DateTime('@' . \strtotime($item->created_time));
     }
 
     /**

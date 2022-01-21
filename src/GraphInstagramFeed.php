@@ -5,13 +5,14 @@ namespace RZ\MixedFeed;
 use DateTime;
 use Generator;
 use GuzzleHttp\Psr7\Request;
-use const PHP_QUERY_RFC3986;
 use Psr\Cache\CacheItemPoolInterface;
 use RZ\MixedFeed\Canonical\FeedItem;
 use RZ\MixedFeed\Canonical\Image;
 use RZ\MixedFeed\Exception\CredentialsException;
 use RZ\MixedFeed\Exception\FeedProviderErrorException;
 use stdClass;
+
+use const PHP_QUERY_RFC3986;
 
 /**
  * Get an Instagram user feed from Facebook Graph API.
@@ -76,12 +77,12 @@ class GraphInstagramFeed extends AbstractFeedProvider
             'limit'        => $count,
         ], '', '&', PHP_QUERY_RFC3986);
 
-        yield new Request('GET', 'https://graph.instagram.com/'.$this->userId.'/media?'.$value);
+        yield new Request('GET', 'https://graph.instagram.com/' . $this->userId . '/media?' . $value);
     }
 
     protected function getCacheKey(): string
     {
-        return $this->getFeedPlatform().$this->userId;
+        return $this->getFeedPlatform() . $this->userId;
     }
 
     protected function getFeed(int $count = 5)

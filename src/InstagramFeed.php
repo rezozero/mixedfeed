@@ -40,7 +40,7 @@ class InstagramFeed extends AbstractFeedProvider
 
     protected function getCacheKey(): string
     {
-        return $this->getFeedPlatform().$this->userId;
+        return $this->getFeedPlatform() . $this->userId;
     }
 
     /**
@@ -54,7 +54,7 @@ class InstagramFeed extends AbstractFeedProvider
         ], '', '&', PHP_QUERY_RFC3986);
         yield new Request(
             'GET',
-            'https://api.instagram.com/v1/users/'.$this->userId.'/media/recent/?'.$value
+            'https://api.instagram.com/v1/users/' . $this->userId . '/media/recent/?' . $value
         );
     }
 
@@ -85,7 +85,7 @@ class InstagramFeed extends AbstractFeedProvider
      */
     public function getDateTime($item): DateTime
     {
-        return new DateTime('@'.$item->created_time);
+        return new DateTime('@' . $item->created_time);
     }
 
     /**

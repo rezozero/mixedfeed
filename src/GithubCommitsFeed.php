@@ -48,7 +48,7 @@ class GithubCommitsFeed extends AbstractFeedProvider
 
     protected function getCacheKey(): string
     {
-        return $this->getFeedPlatform().$this->repository.$this->page;
+        return $this->getFeedPlatform() . $this->repository . $this->page;
     }
 
     /**
@@ -64,7 +64,7 @@ class GithubCommitsFeed extends AbstractFeedProvider
         ], '', '&', PHP_QUERY_RFC3986);
         yield new Request(
             'GET',
-            'https://api.github.com/repos/'.$this->repository.'/commits?'.$value
+            'https://api.github.com/repos/' . $this->repository . '/commits?' . $value
         );
     }
 
@@ -73,7 +73,7 @@ class GithubCommitsFeed extends AbstractFeedProvider
      */
     public function getDateTime($item): ?DateTime
     {
-        return new DateTime('@'.\strtotime($item->commit->author->date));
+        return new DateTime('@' . \strtotime($item->commit->author->date));
     }
 
     /**

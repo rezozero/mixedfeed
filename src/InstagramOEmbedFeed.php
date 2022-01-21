@@ -28,7 +28,7 @@ class InstagramOEmbedFeed extends AbstractFeedProvider
         parent::__construct($cacheProvider);
         foreach ($embedUrls as $i => $url) {
             if (0 === \preg_match('#^https?:\/\/www\.instagram\.com\/p\/#', $url)) {
-                $embedUrls[$i] = 'https://www.instagram.com/p/'.$url;
+                $embedUrls[$i] = 'https://www.instagram.com/p/' . $url;
             }
         }
         $this->embedUrls = $embedUrls;
@@ -36,7 +36,7 @@ class InstagramOEmbedFeed extends AbstractFeedProvider
 
     protected function getCacheKey(): string
     {
-        return $this->getFeedPlatform().\serialize($this->embedUrls);
+        return $this->getFeedPlatform() . \serialize($this->embedUrls);
     }
 
     public function getRequests(int $count = 5): Generator
@@ -47,7 +47,7 @@ class InstagramOEmbedFeed extends AbstractFeedProvider
             ], '', '&', PHP_QUERY_RFC3986);
             yield new Request(
                 'GET',
-                'https://api.instagram.com/oembed?'.$value
+                'https://api.instagram.com/oembed?' . $value
             );
         }
     }
@@ -131,7 +131,7 @@ class InstagramOEmbedFeed extends AbstractFeedProvider
     public function getDateTime($item): ?DateTime
     {
         if (false !== \preg_match('#datetime=\\"([^"]+)\\"#', $item->html, $matches)) {
-            return new DateTime('@'.$matches[1]);
+            return new DateTime('@' . $matches[1]);
         }
 
         return null;

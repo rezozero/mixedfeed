@@ -45,15 +45,15 @@ class MediumFeed extends AbstractFeedProvider
              * If userId is available, use the profile/stream endpoint instead for better consistency
              * between calls.
              */
-            $this->url = 'https://medium.com/_/api/users/'.$this->userId.'/profile/stream';
+            $this->url = 'https://medium.com/_/api/users/' . $this->userId . '/profile/stream';
         } else {
-            $this->url = 'https://medium.com/'.$this->username.'/latest';
+            $this->url = 'https://medium.com/' . $this->username . '/latest';
         }
     }
 
     protected function getCacheKey(): string
     {
-        return $this->getFeedPlatform().$this->username;
+        return $this->getFeedPlatform() . $this->username;
     }
 
     /**
@@ -69,7 +69,7 @@ class MediumFeed extends AbstractFeedProvider
         ], '', '&', PHP_QUERY_RFC3986);
         yield new Request(
             'GET',
-            $this->url.'?'.$value
+            $this->url . '?' . $value
         );
     }
 
@@ -122,6 +122,9 @@ class MediumFeed extends AbstractFeedProvider
     protected function getTypedFeed($body)
     {
         $feed = [];
+        if (!isset($body->payload)) {
+            return $feed;
+        }
         if (isset($body->payload->user)) {
             $this->name = $body->payload->user->name;
         }
@@ -155,7 +158,7 @@ class MediumFeed extends AbstractFeedProvider
     {
         $createdAt = $this->isUsingLatestPublicationDate() ? $item->latestPublishedAt / 1000 : $item->firstPublishedAt / 1000;
 
-        return new DateTime('@'.$createdAt);
+        return new DateTime('@' . $createdAt);
     }
 
     /**
@@ -178,7 +181,7 @@ class MediumFeed extends AbstractFeedProvider
         $feedItem = parent::createFeedItemFromObject($item);
         $feedItem->setId($item->uniqueSlug);
         $feedItem->setAuthor($this->name);
-        $feedItem->setLink('https://medium.com/'.$this->username.'/'.$item->uniqueSlug);
+        $feedItem->setLink('https://medium.com/' . $this->username . '/' . $item->uniqueSlug);
         $feedItem->setTitle($item->title);
         $feedItem->setTags($item->virtuals->tags);
         if (isset($item->content) && isset($item->content->subtitle)) {
@@ -192,7 +195,7 @@ class MediumFeed extends AbstractFeedProvider
                  */
                 if (4 === $paragraph->type && isset($paragraph->metadata)) {
                     $feedItemImage = new Image();
-                    $feedItemImage->setUrl('https://miro.medium.com/'.$paragraph->metadata->id);
+                    $feedItemImage->setUrl('https://miro.medium.com/' . $paragraph->metadata->id);
                     $feedItemImage->setWidth($paragraph->metadata->originalWidth);
                     $feedItemImage->setHeight($paragraph->metadata->originalHeight);
                     $feedItem->addImage($feedItemImage);

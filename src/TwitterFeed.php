@@ -51,7 +51,7 @@ class TwitterFeed extends AbstractTwitterFeed
 
     protected function getCacheKey(): string
     {
-        return $this->getFeedPlatform().$this->userId;
+        return $this->getFeedPlatform() . $this->userId;
     }
 
     protected function getRawFeed(int $count = 5)

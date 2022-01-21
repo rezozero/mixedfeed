@@ -60,7 +60,7 @@ class MixedFeed
                 } catch (FeedProviderErrorException $e) {
                     $errorItem = new FeedItem();
                     $errorItem->setMessage($e->getMessage());
-                    $errorItem->setPlatform($provider->getFeedPlatform().' [errored]');
+                    $errorItem->setPlatform($provider->getFeedPlatform() . ' [errored]');
                     $errorItem->setDateTime(new DateTime());
                     $list = \array_merge($list, [
                         $errorItem,
@@ -112,7 +112,7 @@ class MixedFeed
         foreach ($this->providers as $providerIdx => $provider) {
             if ($provider->supportsRequestPool() && !$provider->isCacheHit($perProviderCount)) {
                 foreach ($provider->getRequests($perProviderCount) as $i => $request) {
-                    $index = $providerIdx.'.'.$i;
+                    $index = $providerIdx . '.' . $i;
                     $requests[$index] = $request;
                 }
             }
@@ -159,7 +159,7 @@ class MixedFeed
             } catch (FeedProviderErrorException $e) {
                 $errorItem = new FeedItem();
                 $errorItem->setMessage($e->getMessage());
-                $errorItem->setPlatform($provider->getFeedPlatform().' [errored]');
+                $errorItem->setPlatform($provider->getFeedPlatform() . ' [errored]');
                 $errorItem->setDateTime(new DateTime());
                 $list = \array_merge($list, [
                     $errorItem,

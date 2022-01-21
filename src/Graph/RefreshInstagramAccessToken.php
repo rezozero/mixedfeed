@@ -33,7 +33,7 @@ final class RefreshInstagramAccessToken
             ]);
             $response = $client->send(new Request(
                 'GET',
-                'https://graph.instagram.com/refresh_access_token?'.$value
+                'https://graph.instagram.com/refresh_access_token?' . $value
             ));
 
             $body = GuzzleUtils::jsonDecode($response->getBody()->getContents(), true);

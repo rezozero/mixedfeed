@@ -12,7 +12,7 @@ class CacheResolver
 {
     public static function parseFromEnvironment(): CacheItemPoolInterface
     {
-        $cacheDir = \dirname(\dirname(__DIR__)).'/var/cache';
+        $cacheDir = \dirname(\dirname(__DIR__)) . '/var/cache';
         switch (\getenv('MF_CACHE_PROVIDER')) {
             case 'apcu':
                 return new ApcuAdapter('mixedfeed');

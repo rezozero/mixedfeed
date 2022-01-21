@@ -10,7 +10,7 @@ class YoutubeMostPopularFeed extends AbstractYoutubeVideoFeed
 {
     protected function getCacheKey(): string
     {
-        return $this->getFeedPlatform().\serialize($this->apiKey);
+        return $this->getFeedPlatform() . \serialize($this->apiKey);
     }
 
     public function getRequests(int $count = 5): Generator
@@ -22,7 +22,7 @@ class YoutubeMostPopularFeed extends AbstractYoutubeVideoFeed
             'maxResults' => $count,
         ]);
 
-        yield new Request('GET', 'https://www.googleapis.com/youtube/v3/videos?'.$value);
+        yield new Request('GET', 'https://www.googleapis.com/youtube/v3/videos?' . $value);
     }
 
     public function getFeedPlatform(): string

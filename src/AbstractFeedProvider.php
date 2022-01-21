@@ -49,12 +49,14 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
             return false;
         }
 
-        $countKey = $this->getCacheKey().$count;
+        $countKey = $this->getCacheKey() . $count;
 
         return $this->cacheProvider->getItem($countKey)->isHit();
     }
 
-    /** @param string $rawFeed */
+    /**
+     * @param string $rawFeed
+     */
     public function setRawFeed(string $rawFeed): AbstractFeedProvider
     {
         $this->rawFeed = Utils::jsonDecode($rawFeed);
@@ -62,7 +64,9 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
         return $this;
     }
 
-    /** @return mixed */
+    /**
+     * @return mixed
+     */
     protected function getFeed(int $count = 5)
     {
         $rawFeed = $this->getCachedRawFeed($count);
@@ -93,7 +97,7 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
 
             return Utils::jsonDecode($response->getBody()->getContents());
         } catch (GuzzleException $e) {
-            throw new FeedProviderErrorException($this->getFeedPlatform(), $e->getMessage(), $e, );
+            throw new FeedProviderErrorException($this->getFeedPlatform(), $e->getMessage(), $e);
         }
     }
 
@@ -108,7 +112,7 @@ abstract class AbstractFeedProvider implements FeedProviderInterface
             return $this->getRawFeed($count);
         }
 
-        $countKey = $this->getCacheKey().$count;
+        $countKey = $this->getCacheKey() . $count;
         $item = $this->cacheProvider->getItem($countKey);
 
         if ($item->isHit()) {

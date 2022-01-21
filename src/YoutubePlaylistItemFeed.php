@@ -28,7 +28,7 @@ class YoutubePlaylistItemFeed extends AbstractYoutubeVideoFeed
 
     protected function getCacheKey(): string
     {
-        return $this->getFeedPlatform().\serialize($this->playlistId);
+        return $this->getFeedPlatform() . \serialize($this->playlistId);
     }
 
     public function getRequests(int $count = 5): Generator
@@ -41,7 +41,7 @@ class YoutubePlaylistItemFeed extends AbstractYoutubeVideoFeed
         ]);
         yield new Request(
             'GET',
-            'https://www.googleapis.com/youtube/v3/playlistItems?'.$value
+            'https://www.googleapis.com/youtube/v3/playlistItems?' . $value
         );
     }
 
@@ -60,7 +60,7 @@ class YoutubePlaylistItemFeed extends AbstractYoutubeVideoFeed
     {
         $feedItem = parent::createFeedItemFromObject($item);
         $feedItem->setId($item->snippet->resourceId->videoId);
-        $feedItem->setLink('https://www.youtube.com/watch?v='.$item->snippet->resourceId->videoId);
+        $feedItem->setLink('https://www.youtube.com/watch?v=' . $item->snippet->resourceId->videoId);
 
         return $feedItem;
     }
