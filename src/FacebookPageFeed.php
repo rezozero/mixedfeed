@@ -23,7 +23,7 @@ class FacebookPageFeed extends AbstractFeedProvider
     /** @var string[] */
     protected array $fields;
 
-    protected string $apiBaseUrl = 'https://graph.facebook.com/v3.3/';
+    protected string $apiBaseUrl = 'https://graph.facebook.com/v13.0/';
 
     protected ?DateTime $since = null;
     protected ?DateTime $until = null;
@@ -46,7 +46,6 @@ class FacebookPageFeed extends AbstractFeedProvider
         $this->accessToken = $accessToken;
         $this->fields = [
             'from',
-            'picture',
             'full_picture',
             'message',
             'story',
@@ -55,6 +54,7 @@ class FacebookPageFeed extends AbstractFeedProvider
             'message_tags',
             'shares',
             'permalink_url',
+            'attachments{media,media_type}',
         ];
         $this->fields = \array_unique(\array_merge($this->fields, $fields));
         $this->apiBaseUrl = $apiBaseUrl ?: $this->apiBaseUrl;
@@ -202,10 +202,32 @@ class FacebookPageFeed extends AbstractFeedProvider
             }, $item->message_tags));
         }
 
-        if (isset($item->full_picture)) {
-            $feedItemImage = new Image();
-            $feedItemImage->setUrl($item->full_picture);
-            $feedItem->addImage($feedItemImage);
+        $images = [];
+        if (isset($item->attachments->data) && is_array($item->attachments->data)) {
+            $imageAttachments = array_values(array_filter($item->attachments->data, function ($img) {
+                return isset($img->media_type) && $img->media_type === 'photo';
+            }));
+            foreach ($imageAttachments as $img) {
+                if (!isset($img->media->image)) {
+                    continue;
+                }
+                $image = new Image();
+                $image->setUrl($img->media->image->src);
+                $image->setWidth($img->media->image->width);
+                $image->setHeight($img->media->image->height);
+                $images[$img->media->image->src] = $image;
+            }
+        }
+
+        // Add full_picture only if it's not already in the images
+        if (isset($item->full_picture) && !isset($images[$item->full_picture])) {
+            $image = new Image();
+            $image->setUrl($item->full_picture);
+            $images[$item->full_picture] = $image;
+        }
+
+        foreach ($images as $image) {
+            $feedItem->addImage($image);
         }
 
         return $feedItem;

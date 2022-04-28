@@ -112,11 +112,12 @@ abstract class AbstractTwitterFeed extends BaseFeedProvider
     protected function createFeedItemFromObject(stdClass $item): FeedItem
     {
         $feedItem = parent::createFeedItemFromObject($item);
-        $feedItem->setId($item->id_str);
+        $feedItem->setId((string) $item->id);
         $feedItem->setAuthor($item->user->name);
-        if (isset($item->entities->urls[0])) {
-            $feedItem->setLink($item->entities->urls[0]->expanded_url);
-        }
+        /**
+         * @see https://dev.to/twitterdev/getting-to-the-canonical-url-for-a-tweet-85e
+         */
+        $feedItem->setLink(sprintf('https://twitter.com/%s/status/%d', $item->user->screen_name, $item->id));
 
         if (isset($item->retweet_count)) {
             $feedItem->setShareCount($item->retweet_count);
@@ -135,6 +136,9 @@ abstract class AbstractTwitterFeed extends BaseFeedProvider
 
         if (isset($item->entities->media)) {
             foreach ($item->entities->media as $media) {
+                if (!in_array($media->type, ['photo', 'animated_gif'], true)) {
+                    continue;
+                }
                 $feedItemImage = new Image();
                 $feedItemImage->setUrl($media->media_url_https);
                 $feedItemImage->setWidth($media->sizes->large->w);
