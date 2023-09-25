@@ -1,2 +1,5 @@
 !vendor
 !composer.lock
+web/test.php
+web/dev.php
+web/test.sample.php
