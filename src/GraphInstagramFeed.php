@@ -57,8 +57,6 @@ class GraphInstagramFeed extends AbstractFeedProvider
                 'thumbnail_url',
                 'timestamp',
                 'permalink',
-                'like_count',
-                'comments_count',
             ];
         }
 
