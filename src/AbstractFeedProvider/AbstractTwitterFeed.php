@@ -66,7 +66,7 @@ abstract class AbstractTwitterFeed extends BaseFeedProvider
      */
     public function getDateTime($item): DateTime
     {
-        return new DateTime('@' . \strtotime($item->created_at));
+        return new DateTime($item->created_at);
     }
 
     /**

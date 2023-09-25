@@ -116,7 +116,7 @@ class FacebookPageFeed extends AbstractFeedProvider
      */
     public function getDateTime($item): ?DateTime
     {
-        return new DateTime('@' . \strtotime($item->created_time));
+        return new DateTime($item->created_time);
     }
 
     /**

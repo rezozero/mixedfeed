@@ -73,7 +73,7 @@ class GithubCommitsFeed extends AbstractFeedProvider
      */
     public function getDateTime($item): ?DateTime
     {
-        return new DateTime('@' . \strtotime($item->commit->author->date));
+        return new DateTime($item->commit->author->date);
     }
 
     /**
