@@ -73,7 +73,7 @@ class GithubReleasesFeed extends AbstractFeedProvider
      */
     public function getDateTime($item): ?DateTime
     {
-        return new DateTime('@' . \strtotime($item->created_at));
+        return new DateTime($item->created_at);
     }
 
     /**
