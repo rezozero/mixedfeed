@@ -19,7 +19,7 @@
         }
     ],
     "require": {
-        "php": "^7.4 || ^8.0",
+        "php": ">=7.4",
         "ext-json": "*",
         "abraham/twitteroauth": "^3.0",
         "guzzlehttp/guzzle": "^7.0",
